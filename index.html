@@ -105,19 +105,6 @@
   .liv .lbar i{display:block;height:100%;border-radius:6px;transition:width .6s ease}
   .liv .lv{width:76px;text-align:right;font-size:12.5px;color:var(--ink-dim);font-variant-numeric:tabular-nums;flex:0 0 auto}
 
-  /* ---------- 巡りのバランス（人・もの・無形） ---------- */
-  .triadbar{display:flex;height:16px;border-radius:9px;overflow:hidden;background:rgba(150,120,150,.12);margin:10px 0 16px}
-  .triadbar i{height:100%;transition:width .6s ease}
-  .tleg{display:flex;flex-direction:column;gap:11px}
-  .tlrow{display:flex;align-items:center;gap:10px}
-  .tlrow .td{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
-  .tlrow .tmeta{flex:1;min-width:0}
-  .tlrow .tmeta .tl{font-size:13.5px;color:var(--ink)}
-  .tlrow .tmeta .tdesc{font-size:11px;color:var(--ink-faint);margin-top:2px}
-  .tlrow .tval{font-size:12.5px;color:var(--ink-dim);font-variant-numeric:tabular-nums;flex:0 0 auto}
-  .tlrow .tpct{font-size:12.5px;color:var(--ink-dim);width:40px;text-align:right;flex:0 0 auto;font-variant-numeric:tabular-nums}
-  .triad-note{font-size:12px;color:var(--ink-faint);line-height:1.75;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
-
   /* ---------- 期間きりかえ（毎日/毎月/毎年/ぜんぶ） ---------- */
   .period{display:flex;justify-content:center;gap:6px;margin:2px 0 10px}
   .period button{border:1px solid var(--line);background:rgba(255,255,255,.6);color:var(--ink-dim);
@@ -343,13 +330,6 @@
       <div id="living"></div>
     </div>
 
-    <div class="livwrap" id="triadwrap">
-      <div class="flow-title">巡りのバランス — 人・もの・無形</div>
-      <div class="triadbar" id="triadBar"></div>
-      <div class="tleg" id="triadLeg"></div>
-      <div class="triad-note">お金が「人のため・もの・無形（学びや経験）」の、どこへ巡ったか。この3つにやさしく流れているほど、豊かさは巡りやすい——という考え方です。</div>
-    </div>
-
     <div class="flow-title">最近の巡り</div>
     <div id="flowList"></div>
   </section>
@@ -511,13 +491,6 @@ const CATS=[
   {k:'other',    l:'その他',  c:'var(--cool-deep)', g:'other'},
 ];
 function catOf(k){ return CATS.find(c=>c.k===k) || CATS[CATS.length-1]; }
-// お金の出口を、3つの方向に束ねる（知らない人にも伝わるように）
-const GROUPS=[
-  {k:'people',   l:'人のため', d:'贈り物・人を支える（ご縁）',     c:'var(--rose)'},
-  {k:'thing',    l:'もの',     d:'食・住まい・装いなど、形あるもの', c:'var(--champ-deep)'},
-  {k:'formless', l:'無形',     d:'学び・楽しみ・経験',             c:'var(--lav)'},
-  {k:'other',    l:'その他',   d:'まだ分かれていない巡り',          c:'var(--cool)'},
-];
 let selCat='food';
 function renderCats(){
   $('cats').innerHTML=CATS.map(c=>
@@ -776,28 +749,6 @@ function render(){
         <div class="ll"><span class="cdot" style="background:${c.c}"></span>${c.l}</div>
         <div class="lbar"><i style="width:${Math.max(6,Math.round(v/maxC*100))}%;background:${c.c}"></i></div>
         <div class="lv">${yen(v)}</div>
-      </div>`;}).join('');
-  }
-
-  // 巡りのバランス（人・もの・無形）
-  const grpSum={};
-  outs.forEach(e=>{const g=catOf(e.cat||'other').g; grpSum[g]=(grpSum[g]||0)+e.amt;});
-  const grpTotal=Object.values(grpSum).reduce((s,v)=>s+v,0);
-  const tw=$('triadwrap');
-  if(!grpTotal){
-    tw.style.display='none';
-  }else{
-    tw.style.display='';
-    const shown=GROUPS.filter(g=>grpSum[g.k]>0);
-    $('triadBar').innerHTML=shown.map(g=>
-      `<i style="width:${grpSum[g.k]/grpTotal*100}%;background:${g.c}"></i>`).join('');
-    $('triadLeg').innerHTML=shown.map(g=>{
-      const pct=Math.round(grpSum[g.k]/grpTotal*100);
-      return `<div class="tlrow">
-        <span class="td" style="background:${g.c}"></span>
-        <div class="tmeta"><div class="tl">${g.l}</div><div class="tdesc">${g.d}</div></div>
-        <div class="tval">${yen(grpSum[g.k])}</div>
-        <div class="tpct">${pct}%</div>
       </div>`;}).join('');
   }
 
