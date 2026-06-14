@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>めぐり — お金を美しく巡らせる</title>
+<meta name="theme-color" content="#f8f1fa" />
+<link rel="manifest" href="./manifest.webmanifest" />
+<link rel="icon" href="./icon-192.png" />
+<link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="めぐり" />
+<style>
+  :root{
+    /* 風水の金運カラーを、くすませてオシャレに */
+    --ink:#3f3343; --ink-dim:#6b5d6e; --ink-faint:#8a7c8d;
+    --champ:#e6c98a; --champ-soft:#f4e3b6; --champ-deep:#c9a85f;   /* シャンパンゴールド：金運の王道 */
+    --lav:#b89ed6; --lav-soft:#e4d8f2;                              /* ラベンダー：最強の金運浄化 */
+    --sage:#9cc4a6; --sage-soft:#dcefe0; --sage-deep:#6fa57f;      /* セージグリーン：成長・増える */
+    --rose:#e6a6b4; --rose-soft:#f6d2da;                           /* ピンク：ご縁の差し色 */
+    --rosegold:#e3b79e;
+    --cool:#aeb4cc; --cool-deep:#9097b8;                           /* suffering 側 */
+    /* 旧名エイリアス（参照互換）*/
+    --gold:var(--champ); --gold-soft:var(--champ-soft); --gold-deep:var(--champ-deep);
+    --card:#ffffff;
+    --line:rgba(150,120,150,.12);
+    --shadow:0 10px 30px rgba(170,140,180,.16);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(130% 95% at 50% -12%, #fffdf6 0%, #f8f1fa 46%, #eef5ef 100%) fixed;
+    min-height:100%;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{max-width:480px;margin:0 auto;padding:26px 20px 118px;position:relative;min-height:100vh}
+
+  header.top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px}
+  .brand{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-size:23px;font-weight:500;letter-spacing:.18em;color:#7c6470}
+  .brand small{font-family:-apple-system,sans-serif;font-weight:400;letter-spacing:.04em;color:var(--ink-faint);font-size:11px;margin-left:9px}
+  .month{font-size:13px;color:var(--ink-dim)}
+
+  .screen{display:none;animation:fade .55s ease}
+  .screen.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  /* ---------- 循環 (home) ---------- */
+  .orb-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px 0 2px}
+  .orb-stage{position:relative;width:256px;height:256px;display:grid;place-items:center}
+  .orb{
+    width:196px;height:196px;border-radius:50%;
+    background:radial-gradient(circle at 38% 30%, #fff 0%, #fbeecb 22%, var(--champ-soft) 46%, var(--rosegold) 72%, var(--lav) 100%);
+    box-shadow:0 0 50px 6px rgba(230,200,140,.45), 0 0 120px 28px rgba(184,158,214,.3), inset 0 0 50px rgba(255,255,255,.6);
+    animation:breathe 6.5s ease-in-out infinite;
+    transition:filter 1s ease, opacity 1s ease;
+  }
+  @keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+  .ring{position:absolute;border-radius:50%;border:1px solid rgba(227,166,144,.28);inset:0;animation:spin 30s linear infinite}
+  .ring.r2{inset:-22px;border-color:rgba(201,180,224,.3);animation-duration:46s;animation-direction:reverse}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .orb-pct{position:absolute;text-align:center;pointer-events:none}
+  .orb-pct b{display:block;font-size:42px;font-weight:300;letter-spacing:.02em;color:#fff;text-shadow:0 1px 10px rgba(190,110,120,.45)}
+  .orb-pct span{font-size:10px;color:rgba(255,255,255,.92);letter-spacing:.22em;font-weight:600;text-shadow:0 1px 6px rgba(190,110,120,.4)}
+
+  .home-caption{text-align:center;color:var(--ink-dim);font-size:14px;line-height:1.9;margin:16px 14px 20px}
+  .home-caption b{color:var(--gold-deep);font-weight:600}
+
+  .spring{position:relative;overflow:hidden;border-radius:22px;padding:20px 18px 17px;margin:4px 0 16px;text-align:center;
+    background:linear-gradient(180deg,#fff,#f1f8f3);
+    border:1px solid rgba(156,196,166,.35);box-shadow:var(--shadow)}
+  .spring-k{font-size:11.5px;letter-spacing:.16em;color:#4f7a5e;font-weight:600}
+  .spring-v{font-size:38px;font-weight:400;margin:7px 0 5px;font-variant-numeric:tabular-nums;color:#3f7a55;
+    text-shadow:0 0 22px rgba(156,196,166,.4)}
+  .spring-sub{font-size:12.5px;color:var(--ink-dim)}
+  .spring-net{margin-top:12px;padding-top:11px;border-top:1px solid rgba(156,196,166,.3);
+    display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--ink-dim)}
+  .spring-net b{font-weight:600;font-variant-numeric:tabular-nums}
+
+  .balance{border-radius:18px;padding:15px 16px;margin:0 0 16px;text-align:center;
+    background:linear-gradient(180deg,#fff,#f7f1fa);
+    border:1px solid rgba(184,158,214,.3);box-shadow:var(--shadow)}
+  .balance .bal-k{font-size:11.5px;letter-spacing:.14em;color:#7c6470;font-weight:600}
+  .balance .bal-v{font-size:30px;font-weight:400;margin:6px 0 4px;font-variant-numeric:tabular-nums}
+  .balance .bal-sub{font-size:12.5px;color:var(--ink-dim);line-height:1.7}
+
+  /* ---------- 暮らしの費目（くらしのどこへ） ---------- */
+  .cats{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;margin:2px 0 6px}
+  .cat{border:1px solid var(--line);background:var(--card);border-radius:16px;padding:9px 13px;
+    font-size:13px;color:var(--ink-dim);cursor:pointer;transition:.2s;box-shadow:var(--shadow);
+    display:flex;align-items:center;gap:6px;font-family:inherit}
+  .cdot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:0 0 auto}
+  .cat.on{color:var(--ink);border-color:var(--champ);background:linear-gradient(180deg,#fff,#fffaef);
+    box-shadow:0 0 0 1.5px var(--champ),0 8px 20px rgba(230,200,140,.28)}
+
+  .livwrap{margin:6px 0 4px}
+  .liv{display:flex;align-items:center;gap:10px;margin:11px 2px}
+  .liv .ll{width:80px;font-size:13px;color:var(--ink-dim);display:flex;align-items:center;gap:5px;flex:0 0 auto}
+  .liv .lbar{flex:1;height:10px;border-radius:6px;background:rgba(150,120,150,.12);overflow:hidden}
+  .liv .lbar i{display:block;height:100%;border-radius:6px;transition:width .6s ease}
+  .liv .lv{width:76px;text-align:right;font-size:12.5px;color:var(--ink-dim);font-variant-numeric:tabular-nums;flex:0 0 auto}
+
+  /* ---------- 期間きりかえ（毎日/毎月/毎年/ぜんぶ） ---------- */
+  .period{display:flex;justify-content:center;gap:6px;margin:2px 0 10px}
+  .period button{border:1px solid var(--line);background:rgba(255,255,255,.6);color:var(--ink-dim);
+    border-radius:14px;padding:7px 15px;font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;transition:.2s}
+  .period button.on{background:linear-gradient(180deg,#fff,#f3ecf8);color:var(--lav);
+    border-color:rgba(184,158,214,.55);box-shadow:0 4px 12px rgba(184,158,214,.25)}
+
+  .stat-row{display:flex;gap:11px;margin-bottom:14px}
+  .stat{flex:1;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px 10px;text-align:center;box-shadow:var(--shadow)}
+  .stat .k{font-size:11.5px;color:var(--ink-dim);letter-spacing:.08em}
+  .stat .v{font-size:20px;margin-top:6px;font-weight:600}
+  .stat .v small{font-size:11px;color:var(--ink-dim);font-weight:400}
+
+  .flow-title{font-size:12.5px;color:var(--ink-dim);letter-spacing:.14em;margin:24px 4px 8px;font-weight:600}
+  .flow{display:flex;align-items:center;gap:13px;padding:13px 4px;border-bottom:1px solid var(--line)}
+  .flow .dot{width:11px;height:11px;border-radius:50%;flex:0 0 auto}
+  .flow .meta{flex:1;min-width:0}
+  .flow .meta .m1{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .flow .meta .m2{font-size:12.5px;color:var(--ink-dim);margin-top:3px}
+  .flow .amt{font-size:14px;font-variant-numeric:tabular-nums;color:var(--ink-dim)}
+  .flow .amt.in{color:var(--gold-deep)}
+  .flow .del{border:0;background:none;color:var(--ink-faint);font-size:17px;line-height:1;padding:6px 4px 6px 10px;cursor:pointer;flex:0 0 auto}
+  .flow .del:active{color:var(--rose)}
+  .empty{color:var(--ink-dim);text-align:center;font-size:14px;padding:30px 0;line-height:1.9}
+
+  /* ---------- 記録 ---------- */
+  .toggle{display:flex;background:rgba(255,255,255,.6);border:1px solid var(--line);border-radius:16px;padding:4px;margin:10px 0 24px;box-shadow:var(--shadow)}
+  .toggle button{flex:1;border:0;background:transparent;color:var(--ink-dim);padding:12px 4px;border-radius:12px;font-size:14px;font-weight:600;letter-spacing:.01em;transition:.25s}
+  .toggle button.on{background:linear-gradient(180deg,#ffd9c2,var(--rose-soft));color:#8a5a62;box-shadow:0 4px 14px rgba(232,154,166,.35)}
+
+  .amount-field{text-align:center;margin:6px 0 28px;padding:14px 0;cursor:text}
+  .amount-field .yen{font-size:24px;color:var(--ink-dim);vertical-align:18px;margin-right:4px}
+  .amount-field input{
+    background:transparent;border:0;color:var(--ink);font-size:56px;font-weight:300;
+    text-align:center;width:72%;outline:none;font-variant-numeric:tabular-nums;
+    border-bottom:2px solid rgba(184,158,214,.45);padding-bottom:8px;letter-spacing:.02em;caret-color:var(--lav);
+  }
+  .amount-field input:focus{border-bottom-color:var(--champ)}
+  .amount-field input::placeholder{color:var(--ink-faint)}
+
+  .q-label{display:flex;justify-content:space-between;font-size:11px;margin:6px 2px 14px;letter-spacing:.08em}
+  .q-label .s{color:var(--cool-deep)}
+  .q-label .b{color:var(--rose)}
+
+  .q-ask{text-align:center;font-size:15px;color:var(--ink);letter-spacing:.04em;margin:2px 0 16px;font-weight:500}
+  .choice{display:flex;gap:12px}
+  .ch{flex:1;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px 10px 16px;
+    text-align:center;cursor:pointer;transition:.28s;opacity:.5;box-shadow:var(--shadow)}
+  .ch.on{opacity:1}
+  .ch.ch-b.on{border-color:var(--champ);box-shadow:0 0 0 1.5px var(--champ),0 10px 26px rgba(230,200,140,.32);
+    background:linear-gradient(180deg,#fff,#fffaef)}
+  .ch.ch-x.on{border-color:var(--cool);box-shadow:0 0 0 1.5px var(--cool),0 10px 24px rgba(150,152,186,.26);
+    background:linear-gradient(180deg,#fff,#f6f7fb)}
+  .ch-orb{width:66px;height:66px;border-radius:50%;margin:0 auto 13px;transition:.3s}
+  .ch-orb.b{background:radial-gradient(circle at 38% 30%,#fff 0%,#fbeecb 28%,var(--champ-soft) 54%,var(--rosegold) 82%,var(--lav) 100%);
+    box-shadow:0 0 26px 3px rgba(230,200,140,.5)}
+  .ch-orb.s{background:radial-gradient(circle at 40% 34%,#fbfaff 0%,#d9d2e6 44%,var(--cool) 84%,var(--cool-deep) 100%);
+    box-shadow:0 0 14px 1px rgba(150,152,186,.35)}
+  .ch-t{font-size:15px;letter-spacing:.1em;font-weight:700}
+  .ch-b .ch-t{color:#a9802f}
+  .ch-x .ch-t{color:#6a7196}
+  .ch-s{font-size:12.5px;color:var(--ink-dim);margin-top:7px;line-height:1.65}
+
+  .date-row{display:flex;align-items:center;justify-content:space-between;background:var(--card);
+    border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-top:18px;box-shadow:var(--shadow)}
+  .date-row span{font-size:14px;color:var(--ink-dim)}
+  .date-row input{border:0;background:transparent;font-size:16px;color:var(--ink);font-family:inherit;outline:none;text-align:right}
+
+  .memo{width:100%;background:var(--card);border:1px solid var(--line);border-radius:16px;color:var(--ink);
+    padding:14px;font-size:14px;outline:none;margin-top:18px;resize:none;font-family:inherit;box-shadow:var(--shadow)}
+  .memo::placeholder{color:var(--ink-faint)}
+
+  .save{width:100%;margin-top:22px;border:0;border-radius:18px;padding:17px;font-size:16px;font-weight:600;
+    letter-spacing:.08em;color:#7a4a52;cursor:pointer;
+    background:linear-gradient(180deg,#ffe0cf,var(--rose));
+    box-shadow:0 10px 28px rgba(232,154,166,.4);transition:.2s}
+  .save:active{transform:translateY(1px)}
+  .hint{text-align:center;color:var(--ink-dim);font-size:12.5px;margin-top:14px;line-height:1.8}
+
+  /* ---------- 巡りの証 (insight) ---------- */
+  .insight{background:linear-gradient(180deg,#fff,#faf6fb);border:1px solid var(--line);border-radius:24px;
+    padding:20px 18px 18px;box-shadow:var(--shadow);margin-top:6px}
+  .ins-title{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-size:18px;letter-spacing:.14em;color:#7c6470;text-align:center;margin-bottom:16px}
+  .ins-head{display:flex;gap:12px;margin-bottom:18px}
+  .ins-stat{flex:1;text-align:center;background:#fff;border:1px solid var(--line);border-radius:16px;padding:13px 8px}
+  .ins-stat .k{font-size:11.5px;color:var(--ink-dim);letter-spacing:.06em}
+  .ins-stat .v{font-size:26px;font-weight:400;margin-top:5px;font-variant-numeric:tabular-nums}
+  .ins-stat .v.gold{color:#b88a32}
+  .ins-stat .v.green{color:#3f7a55}
+  .mhead{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-faint);letter-spacing:.08em;margin:4px 2px 12px}
+  .mrow{display:flex;align-items:center;gap:10px;margin:11px 0}
+  .mrow .mlab{width:38px;font-size:13px;color:var(--ink-dim)}
+  .bar{flex:1;height:11px;border-radius:7px;background:rgba(150,120,150,.14);overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:7px;background:linear-gradient(90deg,var(--champ-soft),var(--champ-deep));transition:width .6s ease}
+  .mrow .mpct{width:40px;text-align:right;font-size:12.5px;color:#b88a32;font-variant-numeric:tabular-nums}
+  .mrow .min{width:66px;text-align:right;font-size:12.5px;color:#3f7a55;font-variant-numeric:tabular-nums}
+  .ins-cum{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+  .ins-cum .ic-h{font-size:11.5px;letter-spacing:.1em;color:var(--ink-faint);text-align:center;margin-bottom:10px}
+  .ins-cum .ic-row{display:flex;justify-content:space-around;text-align:center}
+  .ins-cum .ic-row .k{font-size:11px;color:var(--ink-dim)}
+  .ins-cum .ic-row .v{font-size:15px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums}
+  .ins-note{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);text-align:center;
+    font-size:13px;line-height:1.8;color:var(--ink-dim)}
+  .ins-empty{text-align:center;color:var(--ink-dim);font-size:14px;line-height:1.9;padding:14px 0}
+
+  /* ---------- backup ---------- */
+  .backup{margin-top:30px;padding:20px 18px;background:linear-gradient(180deg,#fff,#faf6fb);
+    border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);text-align:center}
+  .backup-t{font-size:13px;letter-spacing:.1em;color:var(--ink-dim);font-weight:600;margin-bottom:14px}
+  .backup-btns{display:flex;gap:12px}
+  .bk{flex:1;border:0;border-radius:14px;padding:14px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;text-align:center}
+  .bk-save{color:#3f7a55;background:linear-gradient(180deg,#fff,#eef7f0);border:1px solid rgba(156,196,166,.5)}
+  .bk-load{color:#7c6470;background:linear-gradient(180deg,#fff,#f6f0f8);border:1px solid rgba(184,158,214,.5)}
+  .backup-hint{font-size:12px;color:var(--ink-faint);margin-top:13px;line-height:1.7}
+
+  .about-link{text-align:center;font-size:13px;color:var(--ink-dim);text-decoration:underline;
+    text-underline-offset:3px;margin:24px 0 6px;cursor:pointer}
+
+  /* ---------- について (about) ---------- */
+  .about{padding:6px 2px}
+  .about-h{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-size:22px;text-align:center;
+    color:#7c6470;letter-spacing:.14em;margin:8px 0 18px}
+  .about-lead{font-size:14px;line-height:1.95;color:var(--ink-dim);margin:0 0 20px;text-align:center}
+  .about-sec{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+  .about-t{font-size:13px;font-weight:700;color:#a9802f;letter-spacing:.06em;margin-bottom:10px}
+  .about-sec p{font-size:13.5px;line-height:1.95;color:var(--ink);margin:0}
+  .about-note{font-size:12.5px;color:var(--ink-faint);text-align:center;margin:20px 0 6px;line-height:1.7}
+
+  .day-group{margin-bottom:18px}
+  .day-h{font-size:11px;color:var(--ink-faint);letter-spacing:.14em;margin:0 2px 8px}
+
+  /* ---------- nav ---------- */
+  nav{position:fixed;left:0;right:0;bottom:0;z-index:20;
+    background:linear-gradient(180deg,rgba(248,236,242,0),rgba(250,240,244,.95) 36%);
+    padding:14px 0 26px}
+  .nav-in{max-width:480px;margin:0 auto;display:flex;justify-content:space-around;align-items:center}
+  .nav-btn{background:none;border:0;color:var(--ink-dim);display:flex;flex-direction:column;align-items:center;gap:5px;font-size:11.5px;letter-spacing:.1em;font-weight:600}
+  .nav-btn .ic{width:24px;height:24px;display:grid;place-items:center;font-size:18px;transition:.25s}
+  .nav-btn.on{color:var(--lav)}
+  .nav-btn.on .ic{filter:drop-shadow(0 0 7px rgba(184,158,214,.7));transform:translateY(-1px)}
+  .fab{width:56px;height:56px;border-radius:50%;border:0;margin-top:-22px;font-size:26px;color:#fff;
+    background:radial-gradient(circle at 35% 30%,#fff 0%,var(--champ-soft) 38%,var(--champ) 100%);
+    box-shadow:0 6px 22px rgba(230,200,140,.6);cursor:pointer}
+
+  /* ---------- 記録の瞬間の「間」 ---------- */
+  .moment{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(255,253,248,.9);backdrop-filter:blur(16px);text-align:center;padding:34px;
+    opacity:0;pointer-events:none;transition:opacity .65s ease}
+  .moment.show{opacity:1;pointer-events:auto}
+  .moment-orb{width:132px;height:132px;border-radius:50%;margin-bottom:30px}
+  .moment-orb.warm{background:radial-gradient(circle at 38% 30%,#fff 0%,#fbeecb 28%,var(--champ-soft) 54%,var(--rosegold) 82%,var(--lav) 100%);
+    box-shadow:0 0 54px 12px rgba(230,200,140,.5);animation:bloom 2.6s ease forwards}
+  .moment-orb.green{background:radial-gradient(circle at 38% 30%,#fff 0%,#e7f5ea 32%,var(--sage-soft) 58%,var(--sage) 100%);
+    box-shadow:0 0 50px 10px rgba(156,196,166,.5);animation:bloom 2.6s ease forwards}
+  .moment-orb.cool{background:radial-gradient(circle at 40% 34%,#fbfaff 0%,#dcd8ec 45%,var(--cool) 84%,var(--cool-deep) 100%);
+    box-shadow:0 0 40px 7px rgba(150,152,186,.4);animation:breatheCalm 5s ease-in-out infinite}
+  @keyframes bloom{0%{transform:scale(.55);opacity:.3}60%{transform:scale(1.09)}100%{transform:scale(1);opacity:1}}
+  @keyframes breatheCalm{0%,100%{transform:scale(.9)}50%{transform:scale(1.14)}}
+  .moment-text{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-size:23px;color:#7c6470;letter-spacing:.1em;margin-bottom:16px}
+  .moment-sub{font-size:14.5px;color:var(--ink-dim);line-height:2.05;margin-bottom:32px;max-width:300px}
+  .moment-close{border:1px solid var(--line);background:rgba(255,255,255,.75);color:var(--ink-dim);
+    padding:13px 30px;border-radius:30px;font-size:14px;font-family:inherit;cursor:pointer;box-shadow:var(--shadow)}
+
+  .toast{position:fixed;left:50%;bottom:120px;transform:translateX(-50%) translateY(20px);
+    background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border:1px solid var(--line);
+    color:#7c6470;padding:13px 22px;border-radius:30px;font-size:13px;opacity:0;pointer-events:none;
+    transition:.4s;z-index:40;box-shadow:var(--shadow)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">めぐり<small>お金を美しく巡らせる</small></div>
+    <div class="month" id="monthLabel"></div>
+  </header>
+
+  <!-- ===== 循環 (home) ===== -->
+  <section class="screen active" id="screen-home">
+    <div class="period">
+      <button id="pd-day" onclick="setPeriod('day')">今日</button>
+      <button id="pd-month" class="on" onclick="setPeriod('month')">今月</button>
+      <button id="pd-year" onclick="setPeriod('year')">今年</button>
+      <button id="pd-all" onclick="setPeriod('all')">ぜんぶ</button>
+    </div>
+    <div class="orb-wrap">
+      <div class="orb-stage">
+        <div class="ring"></div><div class="ring r2"></div>
+        <div class="orb" id="homeOrb"></div>
+        <div class="orb-pct"><b id="orbPct">—</b><span>BEAUTIFUL</span></div>
+      </div>
+    </div>
+    <div class="home-caption" id="homeCaption">
+      今月のお金は、まだ巡り始めていません。<br>最初のひと巡りを、美しい気持ちで。
+    </div>
+
+    <div class="spring" id="spring">
+      <div class="spring-k">豊かさの泉 — これまで積んだ合計（貯金）</div>
+      <div class="spring-v" id="springV">¥0</div>
+      <div class="spring-sub" id="springSub">「積む」で、ここに貯金が満ちていく。</div>
+      <div class="spring-net" id="springNet" style="display:none"></div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat"><div class="k">巡らせた</div><div class="v" id="statOut">¥0</div></div>
+      <div class="stat"><div class="k">受け取った</div><div class="v" id="statIn">¥0</div></div>
+      <div class="stat"><div class="k">美しさ</div><div class="v" id="statQ">—</div></div>
+    </div>
+
+    <div class="balance" id="balance">
+      <div class="bal-k" id="balK">今月の流れ — 受け取り と 巡らせ の差し引き</div>
+      <div class="bal-v" id="balV">—</div>
+      <div class="bal-sub" id="balSub">今月の流れは、これから。</div>
+    </div>
+
+    <div class="livwrap" id="livwrap">
+      <div class="flow-title" id="livTitle">暮らしの巡り — 今月どこへ</div>
+      <div id="living"></div>
+    </div>
+
+    <div class="flow-title">最近の巡り</div>
+    <div id="flowList"></div>
+  </section>
+
+  <!-- ===== 記録 (record) ===== -->
+  <section class="screen" id="screen-record">
+    <div class="toggle">
+      <button id="tOut" class="on" onclick="setKind('out')">巡らせる</button>
+      <button id="tIn" onclick="setKind('in')">受け取る</button>
+      <button id="tSave" onclick="setKind('save')">積む（ある）</button>
+    </div>
+
+    <div class="amount-field" onclick="document.getElementById('amt').focus()">
+      <span class="yen">¥</span><input id="amt" type="text" inputmode="numeric" autocomplete="off" placeholder="0" />
+    </div>
+
+    <div id="catBlock">
+      <div class="q-ask">暮らしの、どこへ巡らせた？</div>
+      <div class="cats" id="cats"></div>
+    </div>
+
+    <div id="qualityBlock">
+      <div class="q-ask">そのお金は、どちらの意識で？</div>
+      <div class="choice">
+        <button class="ch ch-b on" id="chB" onclick="pickQ(1)">
+          <div class="ch-orb b"></div>
+          <div class="ch-t">BEAUTIFUL</div>
+          <div class="ch-s">苦しみのない静けさ<br>感謝・歓び・ニュートラル</div>
+        </button>
+        <button class="ch ch-x" id="chS" onclick="pickQ(-1)">
+          <div class="ch-orb s"></div>
+          <div class="ch-t">SUFFERING</div>
+          <div class="ch-s">苦しみのある意識<br>恐れ・不安・我慢・義務</div>
+        </button>
+      </div>
+    </div>
+
+    <div class="date-row">
+      <span>日付</span>
+      <input type="date" id="entryDate" />
+    </div>
+
+    <textarea class="memo" id="memo" rows="2" placeholder="どんな気持ちで？ 誰に・何に巡らせた？（任意）"></textarea>
+
+    <button class="save" id="saveBtn" onclick="save()">この巡りを記録する</button>
+    <div class="hint" id="recHint">同じ金額でも、静けさや感謝で出すほど豊かに巡って戻ってくる。</div>
+  </section>
+
+  <!-- ===== 巡り (timeline) ===== -->
+  <section class="screen" id="screen-timeline">
+    <div class="insight" id="insight"></div>
+    <div class="flow-title" style="margin-top:22px">すべての巡り</div>
+    <div id="timeline"></div>
+
+    <div class="backup">
+      <div class="backup-t">データのバックアップ</div>
+      <div class="backup-btns">
+        <button class="bk bk-save" onclick="exportData()">保存する</button>
+        <label class="bk bk-load">戻す<input type="file" accept="application/json,.json" onchange="importData(this)" hidden></label>
+      </div>
+      <div class="backup-hint">この端末の記録を1つのファイルに書き出し／読み込みできます。<br>機種変更のときも、ここから引っ越せます。</div>
+    </div>
+
+    <div class="about-link" onclick="go('about')">このアプリについて</div>
+  </section>
+
+  <!-- ===== について (about) ===== -->
+  <section class="screen" id="screen-about">
+    <div class="about">
+      <div class="about-h">めぐり について</div>
+      <p class="about-lead">お金を“どんな気持ちで巡らせたか”を見つめる、小さなアプリです。家計簿ではなく、お金との向き合い方をやさしく整える鏡として作られました。</p>
+
+      <div class="about-sec">
+        <div class="about-t">記録について</div>
+        <p>・記録は<b>この端末の中だけ</b>に保存されます。他の人や制作者が見ることはありません。<br>・機種変更やデータ消去で消えることがあります。「巡り」タブの<b>「保存する」</b>から、ときどきバックアップしてください。</p>
+      </div>
+
+      <div class="about-sec">
+        <div class="about-t">大切なお願い</div>
+        <p>・このアプリは、お金との付き合い方を見つめるための“体験”です。<br>・投資や金融に関する助言ではなく、金銭的な結果を保証するものではありません。<br>・ご利用は自己責任でお願いします。記録の消失などについて、配布者・制作者は責任を負いかねます。</p>
+      </div>
+
+      <p class="about-note">この考え方は、講座での学びをもとにしています。</p>
+      <button class="save" onclick="go('home')">とじる</button>
+    </div>
+  </section>
+</div>
+
+<nav>
+  <div class="nav-in">
+    <button class="nav-btn on" id="nav-home" onclick="go('home')"><span class="ic">❀</span>循環</button>
+    <button class="fab" onclick="go('record')">＋</button>
+    <button class="nav-btn" id="nav-timeline" onclick="go('timeline')"><span class="ic">≋</span>巡り</button>
+  </div>
+</nav>
+
+<!-- 記録の瞬間の「間」 -->
+<div class="moment" id="moment" onclick="closeMoment()">
+  <div class="moment-orb" id="momentOrb"></div>
+  <div class="moment-text" id="momentText"></div>
+  <div class="moment-sub" id="momentSub"></div>
+  <button class="moment-close" id="momentClose">そっと閉じる</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY='meguri.entries.v1';
+let kind='out';
+const $=id=>document.getElementById(id);
+
+// 期間きりかえ
+let curPeriod='month';
+const PW={day:'今日',month:'今月',year:'今年',all:'これまで'};
+function periodMatch(t,p){
+  const d=new Date(t),n=new Date();
+  if(p==='all') return true;
+  if(p==='year') return d.getFullYear()===n.getFullYear();
+  if(p==='month') return d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth();
+  return d.toDateString()===n.toDateString();
+}
+function setPeriod(p){
+  curPeriod=p;
+  ['day','month','year','all'].forEach(x=>$('pd-'+x).classList.toggle('on',x===p));
+  render();
+}
+
+function load(){ try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return[]} }
+function store(a){ localStorage.setItem(KEY,JSON.stringify(a)) }
+
+// q: -100..100 -> やわらかい色
+function feelColor(q){
+  if(q>=0){
+    const t=q/100;
+    return `radial-gradient(circle at 38% 30%, #fff ${4+t*4}%, #ffe9d2 ${20}%, var(--gold-soft) ${46}%, var(--rosegold) ${76}%, #e58fa0 100%)`;
+  }
+  const t=-q/100;
+  return `radial-gradient(circle at 40% 34%, #fbfaff 0%, #d9d2e6 ${40-t*12}%, var(--cool) ${78}%, var(--cool-deep) 100%)`;
+}
+function feelGlow(q){
+  if(q>=0){const t=q/100;return `0 0 ${18+t*36}px ${2+t*7}px rgba(245,180,170,${.25+t*.4})`;}
+  const t=-q/100;return `0 0 ${10+t*8}px 0 rgba(150,152,186,${.18+t*.18})`;
+}
+// 意識は2つだけ：苦しみが在る(SUFFERING) / 苦しみのない静けさ(BEAUTIFUL)
+function qWord(q){ return q>=0 ? '美しい意識で（静けさ・感謝）' : '苦しみの意識で（恐れ・我慢）'; }
+
+// 暮らしの費目 — 慈しむ言葉で
+const CATS=[
+  {k:'food',     l:'食',      c:'var(--sage-deep)'},
+  {k:'home',     l:'住まい',  c:'var(--rosegold)'},
+  {k:'beauty',   l:'装い・美', c:'var(--rose)'},
+  {k:'joy',      l:'楽しみ',  c:'var(--champ-deep)'},
+  {k:'learn',    l:'学び',    c:'var(--lav)'},
+  {k:'relation', l:'ご縁',    c:'#d98f9e'},
+  {k:'daily',    l:'整え',    c:'var(--sage)'},
+  {k:'other',    l:'その他',  c:'var(--cool-deep)'},
+];
+function catOf(k){ return CATS.find(c=>c.k===k) || CATS[CATS.length-1]; }
+let selCat='food';
+function renderCats(){
+  $('cats').innerHTML=CATS.map(c=>
+    `<button type="button" class="cat${c.k===selCat?' on':''}" onclick="pickCat('${c.k}')"><span class="cdot" style="background:${c.c}"></span>${c.l}</button>`
+  ).join('');
+}
+function pickCat(k){ selCat=k; renderCats(); }
+
+let selQ=1; // 1=Beautiful, -1=Suffering
+function pickQ(v){
+  selQ=v;
+  $('chB').classList.toggle('on',v>0);
+  $('chS').classList.toggle('on',v<0);
+}
+
+$('amt').addEventListener('input',e=>{
+  let v=e.target.value.replace(/[^0-9]/g,'');
+  e.target.value=v?Number(v).toLocaleString():'';
+});
+
+function setKind(k){
+  kind=k;
+  $('tOut').classList.toggle('on',k==='out');
+  $('tIn').classList.toggle('on',k==='in');
+  $('tSave').classList.toggle('on',k==='save');
+  $('qualityBlock').style.display = k==='save' ? 'none' : 'block';
+  $('catBlock').style.display = k==='out' ? 'block' : 'none';
+  if(k==='out'){
+    $('recHint').textContent='同じ金額でも、静けさや感謝で出すほど豊かに巡って戻ってくる。';
+    $('saveBtn').textContent='この巡りを記録する';
+  }else if(k==='in'){
+    $('recHint').textContent='受け取る豊かさにも心を込めて。「ありがとう」で受け取るほど巡りは大きくなる。';
+    $('saveBtn').textContent='この受け取りを記録する';
+  }else{
+    $('recHint').textContent='たとえ500円でも。「私にはお金がある」を、小さく楽しく積み上げる。';
+    $('saveBtn').textContent='豊かさの泉に積む';
+  }
+}
+
+function save(){
+  const amt=Number($('amt').value.replace(/[^0-9]/g,''))||0;
+  if(amt<=0){ toast('金額を入れてね'); return; }
+  const q = kind==='save' ? 100 : selQ*100;
+  const e={ id:Date.now(), kind, amt, q, cat:(kind==='out'?selCat:null), memo:$('memo').value.trim(), t:entryTime() };
+  const a=load(); a.push(e); store(a);
+  $('amt').value=''; $('memo').value=''; pickQ(1); selCat='food'; renderCats(); setToday();
+  render(); go('home');
+  showMoment(kind, q);
+}
+
+const yen=n=>'¥'+Math.round(n).toLocaleString();
+// 記録画面の日付欄 → タイムスタンプ（今日なら現在時刻、過去日なら正午）
+function setToday(){const d=new Date();$('entryDate').value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function entryTime(){
+  const v=$('entryDate').value; if(!v) return Date.now();
+  const d=new Date(v+'T00:00:00'); const now=new Date();
+  return d.toDateString()===now.toDateString() ? Date.now() : d.getTime()+12*3600*1000;
+}
+function delEntry(id){
+  if(!confirm('この巡りを消しますか？')) return;
+  store(load().filter(x=>x.id!==id));
+  render();
+}
+function exportData(){
+  const data=load();
+  if(!data.length){ toast('まだ記録がありません'); return; }
+  const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const d=new Date();
+  const name=`meguri-backup-${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.json`;
+  const a=document.createElement('a'); a.href=url; a.download=name;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  toast('バックアップを保存しました');
+}
+function importData(input){
+  const f=input.files&&input.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const arr=JSON.parse(r.result);
+      if(!Array.isArray(arr)) throw new Error('format');
+      if(confirm('今の記録を、このバックアップで置き換えますか？')){
+        store(arr); render(); toast('バックアップから戻しました'); go('home');
+      }
+    }catch(e){ alert('このファイルは読み込めませんでした。めぐりのバックアップファイルか確認してください。'); }
+    input.value='';
+  };
+  r.readAsText(f);
+}
+function sameMonth(t){const d=new Date(t),n=new Date();return d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth();}
+function dayKey(t){const d=new Date(t);return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;}
+function timeStr(t){const d=new Date(t);return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;}
+function dotColor(q){return q>=0?'var(--rosegold)':'var(--cool)';}
+function monthKey(t){const d=new Date(t);return d.getFullYear()+'-'+d.getMonth();}
+function monthLabel(t){const d=new Date(t);return (d.getMonth()+1)+'月';}
+
+function renderInsight(all){
+  const ins=$('insight');
+  if(!all.length){
+    ins.innerHTML='<div class="ins-title">巡りの証</div><div class="ins-empty">巡りを重ねるほど、<br>ここに「美しく出すと還ってくる」証が現れます。</div>';
+    return;
+  }
+  const outsAll=all.filter(e=>e.kind==='out');
+  const totalInAll=all.filter(e=>e.kind==='in').reduce((s,e)=>s+e.amt,0);
+  const totalOutAll=outsAll.reduce((s,e)=>s+e.amt,0);
+  const totalSaveAll=all.filter(e=>e.kind==='save').reduce((s,e)=>s+e.amt,0);
+  let bp='—';
+  if(outsAll.length){
+    const to=outsAll.reduce((s,e)=>s+e.amt,0);
+    const bw=outsAll.reduce((s,e)=>s+e.amt*Math.max(0,e.q)/100,0);
+    bp=Math.round(bw/to*100)+'%';
+  }
+  // 月ごと集計
+  const m={};
+  all.forEach(e=>{const k=monthKey(e.t); m[k]=m[k]||{out:0,bw:0,in:0,t:e.t};});
+  all.forEach(e=>{const o=m[monthKey(e.t)];
+    if(e.kind==='out'){o.out+=e.amt;o.bw+=e.amt*Math.max(0,e.q)/100;}
+    if(e.kind==='in')o.in+=e.amt;});
+  const months=Object.values(m).sort((a,b)=>b.t-a.t).slice(0,6);
+  const rows=months.map(o=>{
+    const pct=o.out?Math.round(o.bw/o.out*100):0;
+    return `<div class="mrow">
+      <div class="mlab">${monthLabel(o.t)}</div>
+      <div class="bar"><i style="width:${o.out?pct:0}%"></i></div>
+      <div class="mpct">${o.out?pct+'%':'—'}</div>
+      <div class="min">${o.in?'+'+yen(o.in).slice(1):'·'}</div>
+    </div>`;
+  }).join('');
+  const note = totalInAll>0
+    ? '美しく巡らせるほど、豊かさは巡って還ってくる。<br>その軌跡が、ここに刻まれていきます。'
+    : 'まだ受け取りの記録はわずか。<br>美しい巡りを重ねて、還りを見守りましょう。';
+  ins.innerHTML=`
+    <div class="ins-title">巡りの証</div>
+    <div class="ins-head">
+      <div class="ins-stat"><div class="k">美しく巡らせた</div><div class="v gold">${bp}</div></div>
+      <div class="ins-stat"><div class="k">これまで受け取った</div><div class="v green">${yen(totalInAll)}</div></div>
+    </div>
+    <div class="mhead"><span>月ごとの美しい巡り</span><span>受け取り</span></div>
+    ${rows}
+    <div class="ins-cum">
+      <div class="ic-h">これまでの全体 — いまの現状</div>
+      <div class="ic-row">
+        <div><div class="k">巡らせた</div><div class="v" style="color:var(--lav)">${yen(totalOutAll)}</div></div>
+        <div><div class="k">受け取った</div><div class="v" style="color:#3f7a55">${yen(totalInAll)}</div></div>
+        <div><div class="k">積んだ（ある）</div><div class="v" style="color:#b88a32">${yen(totalSaveAll)}</div></div>
+      </div>
+    </div>
+    <div class="ins-note">${note}</div>`;
+}
+
+function render(){
+  const all=load().sort((a,b)=>b.t-a.t);
+  const pw=PW[curPeriod];
+  const scope=all.filter(e=>periodMatch(e.t,curPeriod));
+  const outs=scope.filter(e=>e.kind==='out');
+  const ins=scope.filter(e=>e.kind==='in');
+
+  // 豊かさの泉 = これまで「積む」で貯めた合計（ずっと貯まる貯金額）
+  const spring=all.filter(e=>e.kind==='save').reduce((s,e)=>s+e.amt,0);
+  const savedCount=all.filter(e=>e.kind==='save').length;
+  $('springV').textContent=yen(spring);
+  $('springSub').textContent = spring===0
+    ? '「積む」で、ここに貯金が満ちていく。'
+    : `これまで ${savedCount} 回 積んで、いま ${yen(spring)} が「ある」。`;
+
+  // ぜんぶの差し引き（受け取り − 巡らせ）— 泉とは別の、現状のリアル
+  const inAll=all.filter(e=>e.kind==='in').reduce((s,e)=>s+e.amt,0);
+  const outAll=all.filter(e=>e.kind==='out').reduce((s,e)=>s+e.amt,0);
+  const sn=$('springNet');
+  if(!inAll && !outAll){
+    sn.style.display='none';
+  }else{
+    const netAll=inAll-outAll;
+    const cls=netAll>=0?'#3f7a55':'var(--lav)';
+    const val=(netAll>=0?'＋':'−')+yen(Math.abs(netAll));
+    sn.style.display='flex';
+    sn.innerHTML=`<span>ぜんぶの差し引き（受け取り − 巡らせ）</span><b style="color:${cls}">${val}</b>`;
+  }
+
+  const totalOut=outs.reduce((s,e)=>s+e.amt,0);
+  const totalIn=ins.reduce((s,e)=>s+e.amt,0);
+
+  // 今月の流れ（差し引き）— マイナスも責めずに、やさしく映す
+  const net=totalIn-totalOut;
+  const balV=$('balV'), balSub=$('balSub');
+  $('balK').textContent=`${pw}の流れ — 受け取り と 巡らせ の差し引き`;
+  if(!scope.length){
+    balV.textContent='—'; balV.style.color='var(--ink-faint)';
+    balSub.textContent=`${pw}の流れは、これから。`;
+  }else if(net>=0){
+    balV.textContent='+'+yen(net); balV.style.color='#3f7a55';
+    balSub.textContent='受け取った豊かさが、巡らせた流れを上回っています。';
+  }else{
+    balV.textContent='−'+yen(-net); balV.style.color='var(--lav)';
+    balSub.textContent=`${pw}は ${yen(-net)} を世界へ巡らせました。これも、めぐりの一部。`;
+  }
+
+  let beautyPct=null, beautyCount=0;
+  if(outs.length){
+    const beautyWeighted=outs.reduce((s,e)=>s+e.amt*Math.max(0,e.q)/100,0);
+    beautyPct=Math.round(beautyWeighted/totalOut*100);
+    beautyCount=outs.filter(e=>e.q>=0).length;
+  }
+
+  if(beautyPct===null){
+    $('orbPct').textContent='—';
+    $('homeOrb').style.filter='grayscale(.5) brightness(1.02)';
+    $('homeOrb').style.opacity='.55';
+  }else{
+    $('orbPct').textContent=beautyPct+'%';
+    const f=beautyPct/100;
+    $('homeOrb').style.filter=`grayscale(${(1-f)*.55}) brightness(${.92+f*.18}) saturate(${.7+f*.6})`;
+    $('homeOrb').style.opacity=String(.65+f*.35);
+  }
+
+  $('statOut').textContent=yen(totalOut);
+  $('statIn').innerHTML=totalIn?yen(totalIn):'<small>まだ</small>';
+  $('statQ').innerHTML=outs.length?`${beautyCount}<small>/${outs.length}</small>`:'—';
+  $('statQ').style.color = !outs.length?'var(--ink)':(beautyCount*2>=outs.length?'var(--gold-deep)':'var(--cool-deep)');
+
+  const cap=$('homeCaption');
+  if(beautyPct===null){
+    cap.innerHTML=`${pw}のお金は、まだ巡り始めていません。<br>最初のひと巡りを、美しい気持ちで。`;
+  }else if(beautyPct>=70){
+    cap.innerHTML=`${pw}は <b>${beautyPct}%</b> のお金が美しく巡っています。<br>この流れが、豊かさを連れて戻ってきます。`;
+  }else if(beautyPct>=40){
+    cap.innerHTML=`${pw}は <b>${beautyPct}%</b> が美しい巡り。<br>もう少し、歓びとともに出してみる？`;
+  }else{
+    cap.innerHTML=`${pw}は美しい巡りが <b>${beautyPct}%</b>。<br>次のひと巡りは、ありがとうの気持ちで。`;
+  }
+
+  // 暮らしの巡り（今月の費目別）
+  const catSums={};
+  outs.forEach(e=>{const k=e.cat||'other'; catSums[k]=(catSums[k]||0)+e.amt;});
+  const catEntries=Object.entries(catSums).sort((a,b)=>b[1]-a[1]);
+  const liv=$('living');
+  $('livTitle').textContent=`暮らしの巡り — ${pw}どこへ`;
+  if(!catEntries.length){
+    $('livwrap').style.display='none';
+  }else{
+    $('livwrap').style.display='';
+    const maxC=catEntries[0][1];
+    liv.innerHTML=catEntries.map(([k,v])=>{const c=catOf(k);
+      return `<div class="liv">
+        <div class="ll"><span class="cdot" style="background:${c.c}"></span>${c.l}</div>
+        <div class="lbar"><i style="width:${Math.max(6,Math.round(v/maxC*100))}%;background:${c.c}"></i></div>
+        <div class="lv">${yen(v)}</div>
+      </div>`;}).join('');
+  }
+
+  const fl=$('flowList');
+  fl.innerHTML = all.length ? all.slice(0,6).map(e=>flowRow(e)).join('')
+    : '<div class="empty">まだ巡りがありません。<br>＋ から最初の一歩を。</div>';
+
+  const tl=$('timeline');
+  if(!all.length){ tl.innerHTML='<div class="empty">まだ巡りがありません。</div>'; }
+  else{
+    const groups={};
+    all.forEach(e=>{(groups[dayKey(e.t)]=groups[dayKey(e.t)]||[]).push(e)});
+    tl.innerHTML=Object.entries(groups).map(([d,es])=>
+      `<div class="day-group"><div class="day-h">${d}</div>${es.map(e=>flowRow(e,true)).join('')}</div>`
+    ).join('');
+  }
+
+  renderInsight(all);
+
+  const n=new Date();
+  $('monthLabel').textContent=`${n.getFullYear()}年 ${n.getMonth()+1}月`;
+}
+
+function flowRow(e, del){
+  const sign=e.kind==='out'?'−':'+';
+  const cat=e.kind==='out'?catOf(e.cat||'other'):null;
+  const defLabel=e.kind==='out'?(cat?cat.l:'巡らせた'):e.kind==='in'?'受け取った':'泉に積んだ';
+  const catPre=(cat&&e.memo)?cat.l+' · ':'';
+  const sub=e.kind==='save'?'豊かさを積む（ある）':qWord(e.q);
+  return `<div class="flow">
+    <div class="dot" style="background:${dotColor(e.q)};box-shadow:0 0 10px 1px ${e.q>=0?'rgba(232,154,166,.5)':'rgba(150,152,186,.4)'}"></div>
+    <div class="meta">
+      <div class="m1">${e.memo?escapeHtml(e.memo):defLabel}</div>
+      <div class="m2">${catPre}${sub} · ${timeStr(e.t)}</div>
+    </div>
+    <div class="amt ${e.kind!=='out'?'in':''}">${sign}${yen(e.amt).slice(1)}</div>
+    ${del?`<button class="del" onclick="delEntry(${e.id})" aria-label="削除">×</button>`:''}
+  </div>`;
+}
+function escapeHtml(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+function go(s){
+  document.querySelectorAll('.screen').forEach(el=>el.classList.remove('active'));
+  $('screen-'+s).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
+  if(s==='home')$('nav-home').classList.add('on');
+  if(s==='timeline')$('nav-timeline').classList.add('on');
+  window.scrollTo(0,0);
+  if(s!=='record') render();
+}
+
+// 記録の瞬間の「間」
+let momentT;
+function showMoment(kind,q){
+  const orb=$('momentOrb'), t=$('momentText'), s=$('momentSub'), c=$('momentClose');
+  let cls='warm', txt, sub, closeLabel='そっと閉じる', auto=2600;
+  if(kind==='out' && q<0){
+    cls='cool'; auto=0; closeLabel='受け入れた';
+    txt='ひと呼吸 —';
+    sub='いま在る気持ちを、ただ感じてみて。<br>その気持ちも、そのままでいい。';
+  }else if(kind==='save'){
+    cls='green';
+    txt='今日もまた、ある。';
+    sub='「ある」が、ひとつ積み重なりました。';
+  }else if(kind==='in'){
+    cls='warm';
+    txt='ありがとうで受け取りました';
+    sub='受け取る豊かさも、巡りの一部。';
+  }else{
+    cls='warm';
+    txt='美しく巡らせました';
+    sub='この流れが、豊かさを連れて還ってきます。';
+  }
+  orb.className='moment-orb '+cls;
+  t.innerHTML=txt; s.innerHTML=sub;
+  c.textContent=closeLabel;
+  c.style.display = auto ? 'none' : '';
+  $('moment').classList.add('show');
+  clearTimeout(momentT);
+  if(auto) momentT=setTimeout(closeMoment, auto);
+}
+function closeMoment(){ clearTimeout(momentT); $('moment').classList.remove('show'); }
+
+let toastT;
+function toast(msg){
+  const t=$('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+pickQ(1); renderCats(); setToday(); render();
+
+// オフラインでも動くように（失敗してもアプリ本体は止めない）
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
+</script>
+</body>
+</html>
