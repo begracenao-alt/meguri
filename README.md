@@ -62,7 +62,8 @@
 
 ## いまの公開先
 
-- GitHub Pages: （公開後にここへ住所を書いておくと安心です）
+- GitHub Pages: https://begracenao-alt.github.io/meguri/
+- GitHub リポジトリ（ファイルの元）: https://github.com/begracenao-alt/meguri
 
 ---
 
