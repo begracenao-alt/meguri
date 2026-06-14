@@ -145,7 +145,7 @@
 
   /* ---------- 記録 ---------- */
   .toggle{display:flex;background:rgba(255,255,255,.6);border:1px solid var(--line);border-radius:16px;padding:4px;margin:10px 0 24px;box-shadow:var(--shadow)}
-  .toggle button{flex:1;border:0;background:transparent;color:var(--ink-dim);padding:12px 4px;border-radius:12px;font-size:14px;font-weight:600;letter-spacing:.01em;transition:.25s}
+  .toggle button{flex:1;border:0;background:transparent;color:var(--ink-dim);padding:11px 2px;border-radius:12px;font-size:13px;font-weight:600;letter-spacing:0;transition:.25s}
   .toggle button.on{background:linear-gradient(180deg,#ffd9c2,var(--rose-soft));color:#8a5a62;box-shadow:0 4px 14px rgba(232,154,166,.35)}
 
   .amount-field{text-align:center;margin:6px 0 28px;padding:14px 0;cursor:text}
@@ -359,7 +359,8 @@
     <div class="toggle">
       <button id="tOut" class="on" onclick="setKind('out')">巡らせる</button>
       <button id="tIn" onclick="setKind('in')">受け取る</button>
-      <button id="tSave" onclick="setKind('save')">積む（ある）</button>
+      <button id="tSave" onclick="setKind('save')">積む</button>
+      <button id="tDraw" onclick="setKind('unsave')">おろす</button>
     </div>
 
     <div class="amount-field" onclick="document.getElementById('amt').focus()">
@@ -542,7 +543,8 @@ function setKind(k){
   $('tOut').classList.toggle('on',k==='out');
   $('tIn').classList.toggle('on',k==='in');
   $('tSave').classList.toggle('on',k==='save');
-  $('qualityBlock').style.display = k==='save' ? 'none' : 'block';
+  $('tDraw').classList.toggle('on',k==='unsave');
+  $('qualityBlock').style.display = (k==='out'||k==='in') ? 'block' : 'none';
   $('catBlock').style.display = k==='out' ? 'block' : 'none';
   if(k==='out'){
     $('recHint').textContent='同じ金額でも、静けさや感謝で出すほど豊かに巡って戻ってくる。';
@@ -550,16 +552,19 @@ function setKind(k){
   }else if(k==='in'){
     $('recHint').textContent='受け取る豊かさにも心を込めて。「ありがとう」で受け取るほど巡りは大きくなる。';
     $('saveBtn').textContent='この受け取りを記録する';
-  }else{
+  }else if(k==='save'){
     $('recHint').textContent='たとえ500円でも。「私にはお金がある」を、小さく楽しく積み上げる。';
     $('saveBtn').textContent='豊かさの泉に積む';
+  }else{
+    $('recHint').textContent='ためていた「ある」を、いま暮らしへ戻すだけ。減るのではなく、巡りに還る。';
+    $('saveBtn').textContent='泉からおろす';
   }
 }
 
 function save(){
   const amt=Number($('amt').value.replace(/[^0-9]/g,''))||0;
   if(amt<=0){ toast('金額を入れてね'); return; }
-  const q = kind==='save' ? 100 : selQ*100;
+  const q = (kind==='save'||kind==='unsave') ? 100 : selQ*100;
   const e={ id:Date.now(), kind, amt, q, cat:(kind==='out'?selCat:null), memo:$('memo').value.trim(), t:entryTime() };
   const a=load(); a.push(e); store(a);
   $('amt').value=''; $('memo').value=''; pickQ(1); selCat='food'; renderCats(); setToday();
@@ -623,7 +628,9 @@ function renderInsight(all){
   const outsAll=all.filter(e=>e.kind==='out');
   const totalInAll=all.filter(e=>e.kind==='in').reduce((s,e)=>s+e.amt,0);
   const totalOutAll=outsAll.reduce((s,e)=>s+e.amt,0);
-  const totalSaveAll=all.filter(e=>e.kind==='save').reduce((s,e)=>s+e.amt,0);
+  const totalSaveAll=Math.max(0,
+    all.filter(e=>e.kind==='save').reduce((s,e)=>s+e.amt,0)
+    - all.filter(e=>e.kind==='unsave').reduce((s,e)=>s+e.amt,0));
   let bp='—';
   if(outsAll.length){
     const to=outsAll.reduce((s,e)=>s+e.amt,0);
@@ -675,13 +682,17 @@ function render(){
   const outs=scope.filter(e=>e.kind==='out');
   const ins=scope.filter(e=>e.kind==='in');
 
-  // 豊かさの泉 = これまで「積む」で貯めた合計（ずっと貯まる貯金額）
-  const spring=all.filter(e=>e.kind==='save').reduce((s,e)=>s+e.amt,0);
+  // 豊かさの泉 = 積んだ合計 − おろした合計（いま「ある」貯金）
+  const saved=all.filter(e=>e.kind==='save').reduce((s,e)=>s+e.amt,0);
+  const drawn=all.filter(e=>e.kind==='unsave').reduce((s,e)=>s+e.amt,0);
+  const spring=Math.max(0,saved-drawn);
   const savedCount=all.filter(e=>e.kind==='save').length;
   $('springV').textContent=yen(spring);
-  $('springSub').textContent = spring===0
+  $('springSub').textContent = (saved===0)
     ? '「積む」で、ここに貯金が満ちていく。'
-    : `これまで ${savedCount} 回 積んで、いま ${yen(spring)} が「ある」。`;
+    : (spring===0
+        ? 'いまは泉が空。また小さく、積んでいこう。'
+        : `これまで ${savedCount} 回 積んで、いま ${yen(spring)} が「ある」。`);
 
   // ぜんぶの差し引き（受け取り − 巡らせ）— 泉とは別の、現状のリアル
   const inAll=all.filter(e=>e.kind==='in').reduce((s,e)=>s+e.amt,0);
@@ -811,18 +822,19 @@ function render(){
 }
 
 function flowRow(e, del){
-  const sign=e.kind==='out'?'−':'+';
+  const isMinus=(e.kind==='out'||e.kind==='unsave');
+  const sign=isMinus?'−':'+';
   const cat=e.kind==='out'?catOf(e.cat||'other'):null;
-  const defLabel=e.kind==='out'?(cat?cat.l:'巡らせた'):e.kind==='in'?'受け取った':'泉に積んだ';
+  const defLabel=e.kind==='out'?(cat?cat.l:'巡らせた'):e.kind==='in'?'受け取った':e.kind==='save'?'泉に積んだ':'泉からおろした';
   const catPre=(cat&&e.memo)?cat.l+' · ':'';
-  const sub=e.kind==='save'?'豊かさを積む（ある）':qWord(e.q);
+  const sub=e.kind==='save'?'豊かさを積む（ある）':e.kind==='unsave'?'泉からおろす（暮らしへ戻す）':qWord(e.q);
   return `<div class="flow">
     <div class="dot" style="background:${dotColor(e.q)};box-shadow:0 0 10px 1px ${e.q>=0?'rgba(232,154,166,.5)':'rgba(150,152,186,.4)'}"></div>
     <div class="meta">
       <div class="m1">${e.memo?escapeHtml(e.memo):defLabel}</div>
       <div class="m2">${catPre}${sub} · ${timeStr(e.t)}</div>
     </div>
-    <div class="amt ${e.kind!=='out'?'in':''}">${sign}${yen(e.amt).slice(1)}</div>
+    <div class="amt ${(e.kind==='in'||e.kind==='save')?'in':''}">${sign}${yen(e.amt).slice(1)}</div>
     ${del?`<button class="del" onclick="delEntry(${e.id})" aria-label="削除">×</button>`:''}
   </div>`;
 }
@@ -851,6 +863,10 @@ function showMoment(kind,q){
     cls='green';
     txt='今日もまた、ある。';
     sub='「ある」が、ひとつ積み重なりました。';
+  }else if(kind==='unsave'){
+    cls='green';
+    txt='泉から、暮らしへ。';
+    sub='ためていた「ある」が、いま巡りに還ります。';
   }else if(kind==='in'){
     cls='warm';
     txt='ありがとうで受け取りました';
