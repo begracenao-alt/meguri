@@ -340,7 +340,7 @@
       <button id="tOut" class="on" onclick="setKind('out')">巡らせる</button>
       <button id="tIn" onclick="setKind('in')">受け取る</button>
       <button id="tSave" onclick="setKind('save')">積む</button>
-      <button id="tDraw" onclick="setKind('unsave')">おろす</button>
+      <button id="tDraw" onclick="setKind('unsave')">還す</button>
     </div>
 
     <div class="amount-field" onclick="document.getElementById('amt').focus()">
@@ -529,8 +529,8 @@ function setKind(k){
     $('recHint').textContent='たとえ500円でも。「私にはお金がある」を、小さく楽しく積み上げる。';
     $('saveBtn').textContent='豊かさの泉に積む';
   }else{
-    $('recHint').textContent='ためていた「ある」を、いま暮らしへ戻すだけ。減るのではなく、巡りに還る。';
-    $('saveBtn').textContent='泉からおろす';
+    $('recHint').textContent='ためていた「ある」を、暮らしへ還すだけ。減るのではなく、巡りに還る。';
+    $('saveBtn').textContent='暮らしへ還す';
   }
 }
 
@@ -776,9 +776,9 @@ function flowRow(e, del){
   const isMinus=(e.kind==='out'||e.kind==='unsave');
   const sign=isMinus?'−':'+';
   const cat=e.kind==='out'?catOf(e.cat||'other'):null;
-  const defLabel=e.kind==='out'?(cat?cat.l:'巡らせた'):e.kind==='in'?'受け取った':e.kind==='save'?'泉に積んだ':'泉からおろした';
+  const defLabel=e.kind==='out'?(cat?cat.l:'巡らせた'):e.kind==='in'?'受け取った':e.kind==='save'?'泉に積んだ':'暮らしへ還した';
   const catPre=(cat&&e.memo)?cat.l+' · ':'';
-  const sub=e.kind==='save'?'豊かさを積む（ある）':e.kind==='unsave'?'泉からおろす（暮らしへ戻す）':qWord(e.q);
+  const sub=e.kind==='save'?'豊かさを積む（ある）':e.kind==='unsave'?'泉から暮らしへ還す':qWord(e.q);
   return `<div class="flow">
     <div class="dot" style="background:${dotColor(e.q)};box-shadow:0 0 10px 1px ${e.q>=0?'rgba(232,154,166,.5)':'rgba(150,152,186,.4)'}"></div>
     <div class="meta">
@@ -816,7 +816,7 @@ function showMoment(kind,q){
     sub='「ある」が、ひとつ積み重なりました。';
   }else if(kind==='unsave'){
     cls='green';
-    txt='泉から、暮らしへ。';
+    txt='暮らしへ、還る。';
     sub='ためていた「ある」が、いま巡りに還ります。';
   }else if(kind==='in'){
     cls='warm';
