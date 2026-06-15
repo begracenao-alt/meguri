@@ -274,6 +274,24 @@
   .lc-chart svg{width:100%;height:auto;display:block}
   .lc-hint{font-size:11.5px;color:var(--ink-faint);text-align:center;margin-top:12px;line-height:1.7}
 
+  /* ---------- 貯まっていく流れ ---------- */
+  .sg-divider{height:1px;background:var(--line);margin:16px 0}
+  .sg-mhead{font-size:11.5px;letter-spacing:.1em;color:var(--ink-faint);text-align:center;margin-bottom:8px}
+  .sg-stats{display:flex;gap:10px}
+  .sg-stats > div{flex:1;text-align:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:11px 6px}
+  .sg-stats .k{font-size:11px;color:var(--ink-dim)}
+  .sg-stats .v{font-size:16px;margin-top:4px;font-weight:600;font-variant-numeric:tabular-nums}
+  .sg-compare{text-align:center;font-size:13px;color:var(--ink-dim);margin-top:13px;line-height:1.7}
+  .sg-compare b{font-weight:700}
+  .sg-goal{margin-top:16px}
+  .sg-goal-h{display:flex;justify-content:space-between;align-items:baseline;font-size:11.5px;color:var(--ink-dim);margin-bottom:8px}
+  .sg-edit{color:var(--champ-deep);cursor:pointer}
+  .sg-goal .bar{height:11px}
+  .sg-goal .bar i{background:linear-gradient(90deg,var(--champ-soft),var(--champ-deep))}
+  .sg-goal-s{font-size:12px;color:var(--ink-dim);margin-top:8px;text-align:center;font-variant-numeric:tabular-nums}
+  .sg-setbtn{width:100%;border:1px dashed rgba(201,168,95,.6);background:linear-gradient(180deg,#fff,#fffaef);color:#a9802f;border-radius:14px;padding:13px;font-size:13px;font-family:inherit;cursor:pointer;font-weight:600}
+  .sg-setbtn:active{transform:translateY(1px)}
+
   /* ---------- nav ---------- */
   nav{position:fixed;left:0;right:0;bottom:0;z-index:20;
     background:linear-gradient(180deg,rgba(248,236,242,0),rgba(250,240,244,.95) 36%);
@@ -415,6 +433,7 @@
   <!-- ===== 巡り (timeline) ===== -->
   <section class="screen" id="screen-timeline">
     <div class="insight" id="insight"></div>
+    <div id="saveGrow"></div>
     <div id="catTrend"></div>
     <div class="tl-nav">
       <button class="tl-arrow" id="tlPrev" onclick="shiftMonth(-1)" aria-label="前の月">◀</button>
@@ -805,6 +824,97 @@ function renderTimeline(){
   tl.innerHTML=order.map(dk=>`<div class="day-group"><div class="day-h">${dk}</div>${dayGroups[dk].map(e=>flowRow(e,true)).join('')}</div>`).join('');
 }
 
+// 貯金目標
+const GKEY='meguri.goal.v1';
+function getGoal(){ try{return JSON.parse(localStorage.getItem(GKEY))||{save:0}}catch(e){return{save:0}} }
+function setGoalSave(n){ const g=getGoal(); g.save=Math.max(0,Math.round(n)||0); localStorage.setItem(GKEY,JSON.stringify(g)); }
+function editGoal(){
+  const g=getGoal();
+  const v=prompt('今月、豊かさの泉に積みたい金額は？（円）\n※ 我慢ではなく、できたら嬉しい“目安”です',g.save||'');
+  if(v===null) return;
+  const n=Number(String(v).replace(/[^0-9]/g,''))||0;
+  setGoalSave(n); render(); toast(n?('今月の目標 '+yen(n)+' 🤍'):'目標をはずしました');
+}
+
+// 月の範囲・合計
+function monthBounds(y,m){ return [new Date(y,m,1).getTime(), new Date(y,m+1,1).getTime()-1]; }
+function sumKind(all,kind,s,e){ return all.filter(x=>x.kind===kind&&x.t>=s&&x.t<=e).reduce((a,x)=>a+x.amt,0); }
+
+// 貯まっていく流れ（泉の推移＋今月のまとめ＋貯金目標）
+function renderSaveGrow(all){
+  const box=$('saveGrow'); if(!box) return;
+  if(!all.length){ box.innerHTML=''; return; }
+  const now=new Date(), y=now.getFullYear(), m=now.getMonth();
+  const [ms,me]=monthBounds(y,m);
+  const [ls,le]=monthBounds(m===0?y-1:y, m===0?11:m-1);
+
+  const inM=sumKind(all,'in',ms,me), outM=sumKind(all,'out',ms,me);
+  const saveM=Math.max(0, sumKind(all,'save',ms,me)-sumKind(all,'unsave',ms,me));
+  const netM=inM-outM;
+  const inL=sumKind(all,'in',ls,le), outL=sumKind(all,'out',ls,le);
+  const netL=inL-outL;
+
+  let compare='';
+  if(all.some(x=>x.t<ms)){
+    const d=netM-netL;
+    if(d>=0) compare=`先月より <b style="color:#3f7a55">${yen(d)}</b> 多く手もとに残りました🤍`;
+    else compare=`先月より ${yen(-d)} 多めに巡らせた月。これも、めぐり。`;
+  }
+
+  // 泉（貯金）の月末残高 6ヶ月
+  const months=ctMonths();
+  const balAt=(yy,mo)=>{const e=new Date(yy,mo+1,1).getTime()-1;
+    const s=all.filter(x=>x.kind==='save'&&x.t<=e).reduce((a,x)=>a+x.amt,0);
+    const u=all.filter(x=>x.kind==='unsave'&&x.t<=e).reduce((a,x)=>a+x.amt,0);
+    return Math.max(0,s-u);};
+  const series=months.map(mm=>{const p=mm.key.split('-'); return {label:mm.label, val:balAt(+p[0],+p[1])};});
+  const springNow=Math.max(0, all.filter(x=>x.kind==='save').reduce((a,x)=>a+x.amt,0) - all.filter(x=>x.kind==='unsave').reduce((a,x)=>a+x.amt,0));
+
+  // 折れ線SVG（上に伸びる泉）
+  const W=320,H=150,padL=12,padR=12,padT=18,padB=22, innerW=W-padL-padR, innerH=H-padT-padB;
+  const maxV=Math.max.apply(null,series.map(s=>s.val))||1;
+  const X=i=>padL+i*(innerW/(series.length-1)), Y=v=>padT+innerH*(1-v/maxV);
+  const col='var(--champ-deep)';
+  const poly=series.map((s,i)=>`${X(i).toFixed(1)},${Y(s.val).toFixed(1)}`).join(' ');
+  let svg=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="貯金の推移">`;
+  svg+=`<polygon points="${padL},${(padT+innerH).toFixed(1)} ${poly} ${W-padR},${(padT+innerH).toFixed(1)}" style="fill:${col};opacity:.09"/>`;
+  svg+=`<polyline points="${poly}" style="fill:none;stroke:${col};stroke-width:2.4" stroke-linecap="round" stroke-linejoin="round"/>`;
+  series.forEach((s,i)=>{svg+=`<circle cx="${X(i).toFixed(1)}" cy="${Y(s.val).toFixed(1)}" r="3" style="fill:${col}"/>`;
+    if(s.val>0) svg+=`<text x="${X(i).toFixed(1)}" y="${(Y(s.val)-7).toFixed(1)}" text-anchor="middle" font-size="8.5" style="fill:${col}">${yen(s.val)}</text>`;});
+  series.forEach((s,i)=>{svg+=`<text x="${X(i).toFixed(1)}" y="${H-6}" text-anchor="middle" font-size="9.5" fill="#a99bad">${s.label}月</text>`;});
+  svg+=`</svg>`;
+
+  // 貯金目標
+  const g=getGoal();
+  let goalHtml;
+  if(g.save>0){
+    const pct=Math.min(100,Math.round(saveM/g.save*100));
+    const left=Math.max(0,g.save-saveM);
+    goalHtml=`<div class="sg-goal">
+      <div class="sg-goal-h"><span>今月の貯金目標</span><span class="sg-edit" onclick="editGoal()">変える</span></div>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <div class="sg-goal-s">${saveM>0?('今月 '+yen(saveM)+' 積みました'):'今月はまだ積んでいません'} · 目標 ${yen(g.save)}${left>0?('（あと '+yen(left)+'）'):' 達成🎉'}</div>
+    </div>`;
+  }else{
+    goalHtml=`<div class="sg-goal"><button class="sg-setbtn" onclick="editGoal()">🎯 今月の貯金目標を決める</button></div>`;
+  }
+
+  box.innerHTML=`<div class="cattrend">
+    <div class="ct-title">貯まっていく流れ</div>
+    <div class="ct-sub">今 ${yen(springNow)} が「ある」 · 豊かさの泉の育ち</div>
+    <div class="lc-chart" style="margin-top:4px">${svg}</div>
+    ${goalHtml}
+    <div class="sg-divider"></div>
+    <div class="sg-mhead">今月のまとめ（${m+1}月）</div>
+    <div class="sg-stats">
+      <div><div class="k">受け取り</div><div class="v" style="color:#3f7a55">${yen(inM)}</div></div>
+      <div><div class="k">巡らせ</div><div class="v" style="color:var(--lav)">${yen(outM)}</div></div>
+      <div><div class="k">残り</div><div class="v" style="color:${netM>=0?'#3f7a55':'var(--lav)'}">${(netM>=0?'+':'−')+yen(Math.abs(netM))}</div></div>
+    </div>
+    ${compare?`<div class="sg-compare">${compare}</div>`:''}
+  </div>`;
+}
+
 function render(){
   const all=load().sort((a,b)=>b.t-a.t);
   const pw=PW[curPeriod];
@@ -914,6 +1024,7 @@ function render(){
     : '<div class="empty">まだ巡りがありません。<br>＋ から最初の一歩を。</div>';
 
   renderTimeline();
+  renderSaveGrow(all);
   renderCatTrends(all);
   renderInsight(all);
 
