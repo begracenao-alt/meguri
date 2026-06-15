@@ -241,6 +241,39 @@
   .day-group{margin-bottom:18px}
   .day-h{font-size:11px;color:var(--ink-faint);letter-spacing:.14em;margin:0 2px 8px}
 
+  /* ---------- 月の区切り ---------- */
+  .month-sep{display:flex;justify-content:space-between;align-items:baseline;margin:26px 2px 14px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+  .month-sep:first-child{margin-top:2px}
+  .month-sep .ms-m{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-size:16px;letter-spacing:.12em;color:#7c6470}
+  .month-sep .ms-s{font-size:11px;color:var(--ink-faint);font-variant-numeric:tabular-nums;letter-spacing:.02em}
+
+  /* ---------- 行の費目マーク ---------- */
+  .rowdot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:middle}
+
+  /* ---------- 月めくりナビ ---------- */
+  .tl-nav{display:flex;align-items:center;justify-content:space-between;margin:24px 2px 16px}
+  .tl-arrow{border:1px solid var(--line);background:rgba(255,255,255,.7);color:var(--ink-dim);width:40px;height:40px;border-radius:50%;font-size:14px;cursor:pointer;box-shadow:var(--shadow);transition:.2s;font-family:inherit;flex:0 0 auto}
+  .tl-arrow:active{transform:scale(.94)}
+  .tl-arrow:disabled{opacity:.28;cursor:default;box-shadow:none}
+  .tl-mlabel{text-align:center;flex:1}
+  .tl-m{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-size:17px;letter-spacing:.12em;color:#7c6470}
+  .tl-msum{font-size:11px;color:var(--ink-faint);margin-top:3px;font-variant-numeric:tabular-nums}
+
+  /* ---------- 費目ごとの移り変わり ---------- */
+  .cattrend{background:linear-gradient(180deg,#fff,#faf6fb);border:1px solid var(--line);border-radius:24px;padding:18px 16px 16px;box-shadow:var(--shadow);margin-top:22px}
+  .ct-title{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-size:17px;letter-spacing:.14em;color:#7c6470;text-align:center;margin-bottom:5px}
+  .ct-sub{font-size:11.5px;color:var(--ink-faint);text-align:center;margin-bottom:18px;line-height:1.6}
+  .ct-row{display:flex;align-items:center;gap:10px;margin:12px 0}
+  .ct-head{margin:0 0 4px}
+  .ct-name{width:64px;flex:0 0 auto;font-size:13px;color:var(--ink-dim);display:flex;align-items:center;gap:6px}
+  .ct-bars{flex:1;display:flex;align-items:flex-end;gap:3px;height:46px}
+  .ct-bars-h{flex:1;display:flex;gap:3px}
+  .ct-bars-h span{flex:1;text-align:center;font-size:10px;color:var(--ink-faint)}
+  .cb{flex:1;height:100%;display:flex;align-items:flex-end;justify-content:center}
+  .cb i{display:block;width:100%;max-width:14px;border-radius:4px 4px 2px 2px;min-height:2px;transition:height .5s ease}
+  .ct-total{width:70px;flex:0 0 auto;text-align:right;font-size:12.5px;color:var(--ink-dim);font-variant-numeric:tabular-nums}
+  .ct-empty{text-align:center;color:var(--ink-dim);font-size:13px;line-height:1.9;padding:8px 0 2px}
+
   /* ---------- nav ---------- */
   nav{position:fixed;left:0;right:0;bottom:0;z-index:20;
     background:linear-gradient(180deg,rgba(248,236,242,0),rgba(250,240,244,.95) 36%);
@@ -382,7 +415,12 @@
   <!-- ===== 巡り (timeline) ===== -->
   <section class="screen" id="screen-timeline">
     <div class="insight" id="insight"></div>
-    <div class="flow-title" style="margin-top:22px">すべての巡り</div>
+    <div id="catTrend"></div>
+    <div class="tl-nav">
+      <button class="tl-arrow" id="tlPrev" onclick="shiftMonth(-1)" aria-label="前の月">◀</button>
+      <div class="tl-mlabel"><div class="tl-m" id="tlMonthLabel">—</div><div class="tl-msum" id="tlMonthSum"></div></div>
+      <button class="tl-arrow" id="tlNext" onclick="shiftMonth(1)" aria-label="次の月">▶</button>
+    </div>
     <div id="timeline"></div>
 
     <div class="backup">
@@ -540,6 +578,7 @@ function save(){
   const q = (kind==='save'||kind==='unsave') ? 100 : selQ*100;
   const e={ id:Date.now(), kind, amt, q, cat:(kind==='out'?selCat:null), memo:$('memo').value.trim(), t:entryTime() };
   const a=load(); a.push(e); store(a);
+  const sd=new Date(e.t); tlY=sd.getFullYear(); tlM=sd.getMonth(); // 記録した月を表示
   $('amt').value=''; $('memo').value=''; pickQ(1); selCat='food'; renderCats(); setToday();
   render(); go('home');
   showMoment(kind, q);
@@ -646,6 +685,85 @@ function renderInsight(all){
       </div>
     </div>
     <div class="ins-note">${note}</div>`;
+}
+
+// 費目ごとの移り変わり（最近6ヶ月）
+function renderCatTrends(all){
+  const box=$('catTrend'); if(!box) return;
+  const outs=all.filter(e=>e.kind==='out');
+  if(!outs.length){
+    box.innerHTML='<div class="cattrend"><div class="ct-title">費目ごとの移り変わり</div>'
+      +'<div class="ct-empty">「巡らせる」で費目を選んで記録すると、<br>ここに費目ごとの移り変わりが現れます。</div></div>';
+    return;
+  }
+  const now=new Date();
+  const months=[];
+  for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({key:d.getFullYear()+'-'+d.getMonth(),label:(d.getMonth()+1)});}
+  const keySet=new Set(months.map(m=>m.key));
+  const data={};
+  outs.forEach(e=>{const d=new Date(e.t);const mk=d.getFullYear()+'-'+d.getMonth();
+    if(!keySet.has(mk)) return;
+    const k=e.cat||'other';
+    data[k]=data[k]||{m:{},total:0};
+    data[k].m[mk]=(data[k].m[mk]||0)+e.amt; data[k].total+=e.amt;});
+  const cats=Object.entries(data).filter(([k,v])=>v.total>0).sort((a,b)=>b[1].total-a[1].total);
+  if(!cats.length){
+    box.innerHTML='<div class="cattrend"><div class="ct-title">費目ごとの移り変わり</div>'
+      +'<div class="ct-empty">最近6ヶ月の巡らせの記録が、まだありません。</div></div>';
+    return;
+  }
+  const headMonths=months.map(m=>`<span>${m.label}月</span>`).join('');
+  const rows=cats.map(([k,v])=>{
+    const c=catOf(k);
+    const maxC=Math.max.apply(null,months.map(m=>v.m[m.key]||0))||1;
+    const bars=months.map(m=>{const val=v.m[m.key]||0;const h=val?Math.max(8,Math.round(val/maxC*100)):0;
+      return `<span class="cb"><i style="height:${h}%;background:${c.c};opacity:${val?1:.16}"></i></span>`;}).join('');
+    return `<div class="ct-row">
+      <div class="ct-name"><span class="rowdot" style="background:${c.c}"></span>${c.l}</div>
+      <div class="ct-bars">${bars}</div>
+      <div class="ct-total">${yen(v.total)}</div>
+    </div>`;
+  }).join('');
+  box.innerHTML=`<div class="cattrend">
+    <div class="ct-title">費目ごとの移り変わり</div>
+    <div class="ct-sub">最近6ヶ月 · どの暮らしへ、どれだけ巡らせたか</div>
+    <div class="ct-row ct-head"><div class="ct-name"></div><div class="ct-bars-h">${headMonths}</div><div class="ct-total"></div></div>
+    ${rows}
+  </div>`;
+}
+
+// 月めくり（巡りタブ）
+let tlY, tlM;
+function initTlMonth(){const n=new Date(); tlY=n.getFullYear(); tlM=n.getMonth();}
+function shiftMonth(d){
+  tlM+=d;
+  while(tlM<0){tlM+=12;tlY--;}
+  while(tlM>11){tlM-=12;tlY++;}
+  renderTimeline();
+}
+function renderTimeline(){
+  const tl=$('timeline'); if(!tl) return;
+  if(tlY===undefined) initTlMonth();
+  const all=load().sort((a,b)=>b.t-a.t);
+  const monthEntries=all.filter(e=>{const d=new Date(e.t);return d.getFullYear()===tlY&&d.getMonth()===tlM;});
+
+  if($('tlMonthLabel')) $('tlMonthLabel').textContent=`${tlY}年${tlM+1}月`;
+  let out=0,inn=0; monthEntries.forEach(e=>{if(e.kind==='out')out+=e.amt;if(e.kind==='in')inn+=e.amt;});
+  const parts=[]; if(out)parts.push('巡らせ '+yen(out)); if(inn)parts.push('受け取り '+yen(inn));
+  if($('tlMonthSum')) $('tlMonthSum').textContent=parts.join(' · ');
+
+  const now=new Date();
+  const atCurrentOrFuture=(tlY>now.getFullYear())||(tlY===now.getFullYear()&&tlM>=now.getMonth());
+  if($('tlNext')) $('tlNext').disabled=atCurrentOrFuture;
+  const minT=all.length?Math.min.apply(null,all.map(e=>e.t)):now.getTime();
+  const od=new Date(minT);
+  const atOrBeforeOldest=(tlY<od.getFullYear())||(tlY===od.getFullYear()&&tlM<=od.getMonth());
+  if($('tlPrev')) $('tlPrev').disabled=atOrBeforeOldest;
+
+  if(!monthEntries.length){ tl.innerHTML='<div class="empty">この月の巡りは、まだありません。</div>'; return; }
+  const dayGroups={}; const order=[];
+  monthEntries.forEach(e=>{const dk=dayKey(e.t); if(!dayGroups[dk]){dayGroups[dk]=[];order.push(dk);} dayGroups[dk].push(e);});
+  tl.innerHTML=order.map(dk=>`<div class="day-group"><div class="day-h">${dk}</div>${dayGroups[dk].map(e=>flowRow(e,true)).join('')}</div>`).join('');
 }
 
 function render(){
@@ -756,16 +874,8 @@ function render(){
   fl.innerHTML = all.length ? all.slice(0,6).map(e=>flowRow(e)).join('')
     : '<div class="empty">まだ巡りがありません。<br>＋ から最初の一歩を。</div>';
 
-  const tl=$('timeline');
-  if(!all.length){ tl.innerHTML='<div class="empty">まだ巡りがありません。</div>'; }
-  else{
-    const groups={};
-    all.forEach(e=>{(groups[dayKey(e.t)]=groups[dayKey(e.t)]||[]).push(e)});
-    tl.innerHTML=Object.entries(groups).map(([d,es])=>
-      `<div class="day-group"><div class="day-h">${d}</div>${es.map(e=>flowRow(e,true)).join('')}</div>`
-    ).join('');
-  }
-
+  renderTimeline();
+  renderCatTrends(all);
   renderInsight(all);
 
   const n=new Date();
@@ -777,13 +887,14 @@ function flowRow(e, del){
   const sign=isMinus?'−':'+';
   const cat=e.kind==='out'?catOf(e.cat||'other'):null;
   const defLabel=e.kind==='out'?(cat?cat.l:'巡らせた'):e.kind==='in'?'受け取った':e.kind==='save'?'泉に積んだ':'暮らしへ還した';
+  const catDot=cat?`<span class="rowdot" style="background:${cat.c}"></span>`:'';
   const catPre=(cat&&e.memo)?cat.l+' · ':'';
   const sub=e.kind==='save'?'豊かさを積む（ある）':e.kind==='unsave'?'泉から暮らしへ還す':qWord(e.q);
   return `<div class="flow">
     <div class="dot" style="background:${dotColor(e.q)};box-shadow:0 0 10px 1px ${e.q>=0?'rgba(232,154,166,.5)':'rgba(150,152,186,.4)'}"></div>
     <div class="meta">
       <div class="m1">${e.memo?escapeHtml(e.memo):defLabel}</div>
-      <div class="m2">${catPre}${sub} · ${timeStr(e.t)}</div>
+      <div class="m2">${catDot}${catPre}${sub} · ${timeStr(e.t)}</div>
     </div>
     <div class="amt ${(e.kind==='in'||e.kind==='save')?'in':''}">${sign}${yen(e.amt).slice(1)}</div>
     ${del?`<button class="del" onclick="delEntry(${e.id})" aria-label="削除">×</button>`:''}
@@ -843,7 +954,7 @@ function toast(msg){
   clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),1800);
 }
 
-pickQ(1); renderCats(); setToday(); render();
+pickQ(1); renderCats(); setToday(); initTlMonth(); render();
 
 // オフラインでも動くように（失敗してもアプリ本体は止めない）
 if('serviceWorker' in navigator){
