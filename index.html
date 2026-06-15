@@ -263,16 +263,16 @@
   .cattrend{background:linear-gradient(180deg,#fff,#faf6fb);border:1px solid var(--line);border-radius:24px;padding:18px 16px 16px;box-shadow:var(--shadow);margin-top:22px}
   .ct-title{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-size:17px;letter-spacing:.14em;color:#7c6470;text-align:center;margin-bottom:5px}
   .ct-sub{font-size:11.5px;color:var(--ink-faint);text-align:center;margin-bottom:18px;line-height:1.6}
-  .ct-row{display:flex;align-items:center;gap:10px;margin:12px 0}
-  .ct-head{margin:0 0 4px}
-  .ct-name{width:64px;flex:0 0 auto;font-size:13px;color:var(--ink-dim);display:flex;align-items:center;gap:6px}
-  .ct-bars{flex:1;display:flex;align-items:flex-end;gap:3px;height:46px}
-  .ct-bars-h{flex:1;display:flex;gap:3px}
-  .ct-bars-h span{flex:1;text-align:center;font-size:10px;color:var(--ink-faint)}
-  .cb{flex:1;height:100%;display:flex;align-items:flex-end;justify-content:center}
-  .cb i{display:block;width:100%;max-width:14px;border-radius:4px 4px 2px 2px;min-height:2px;transition:height .5s ease}
-  .ct-total{width:70px;flex:0 0 auto;text-align:right;font-size:12.5px;color:var(--ink-dim);font-variant-numeric:tabular-nums}
   .ct-empty{text-align:center;color:var(--ink-dim);font-size:13px;line-height:1.9;padding:8px 0 2px}
+  .lc-wrap{display:flex;gap:10px;margin-top:6px;align-items:flex-start}
+  .lc-legend{width:76px;flex:0 0 auto;display:flex;flex-direction:column;gap:4px;padding-top:6px}
+  .lc-leg{display:flex;align-items:center;gap:6px;background:none;border:0;padding:5px 4px;font-family:inherit;font-size:12.5px;color:var(--ink-dim);cursor:pointer;text-align:left;border-radius:9px;width:100%;transition:.2s}
+  .lc-leg .rowdot{margin:0;flex:0 0 auto}
+  .lc-leg.on{color:var(--ink);font-weight:700;background:rgba(255,255,255,.7);box-shadow:var(--shadow)}
+  .lc-leg.dim{opacity:.34}
+  .lc-chart{flex:1;min-width:0}
+  .lc-chart svg{width:100%;height:auto;display:block}
+  .lc-hint{font-size:11.5px;color:var(--ink-faint);text-align:center;margin-top:12px;line-height:1.7}
 
   /* ---------- nav ---------- */
   nav{position:fixed;left:0;right:0;bottom:0;z-index:20;
@@ -687,18 +687,24 @@ function renderInsight(all){
     <div class="ins-note">${note}</div>`;
 }
 
-// 費目ごとの移り変わり（最近6ヶ月）
+// 費目ごとの移り変わり（最近6ヶ月の折れ線グラフ）
+let focusCat=null;
+function focusCategory(k){ focusCat=(focusCat===k)?null:k; renderCatTrends(load()); }
+function ctMonths(){
+  const now=new Date(), months=[];
+  for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    months.push({key:d.getFullYear()+'-'+d.getMonth(),label:(d.getMonth()+1)});}
+  return months;
+}
 function renderCatTrends(all){
   const box=$('catTrend'); if(!box) return;
-  const outs=all.filter(e=>e.kind==='out');
+  const outs=(all||load()).filter(e=>e.kind==='out');
   if(!outs.length){
     box.innerHTML='<div class="cattrend"><div class="ct-title">費目ごとの移り変わり</div>'
-      +'<div class="ct-empty">「巡らせる」で費目を選んで記録すると、<br>ここに費目ごとの移り変わりが現れます。</div></div>';
+      +'<div class="ct-empty">「巡らせる」で費目を選んで記録すると、<br>ここに費目ごとの折れ線が現れます。</div></div>';
     return;
   }
-  const now=new Date();
-  const months=[];
-  for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({key:d.getFullYear()+'-'+d.getMonth(),label:(d.getMonth()+1)});}
+  const months=ctMonths();
   const keySet=new Set(months.map(m=>m.key));
   const data={};
   outs.forEach(e=>{const d=new Date(e.t);const mk=d.getFullYear()+'-'+d.getMonth();
@@ -706,29 +712,62 @@ function renderCatTrends(all){
     const k=e.cat||'other';
     data[k]=data[k]||{m:{},total:0};
     data[k].m[mk]=(data[k].m[mk]||0)+e.amt; data[k].total+=e.amt;});
-  const cats=Object.entries(data).filter(([k,v])=>v.total>0).sort((a,b)=>b[1].total-a[1].total);
+  const cats=Object.entries(data).filter(([k,v])=>v.total>0).sort((a,b)=>b[1].total-a[1].total).map(x=>x[0]);
   if(!cats.length){
     box.innerHTML='<div class="cattrend"><div class="ct-title">費目ごとの移り変わり</div>'
       +'<div class="ct-empty">最近6ヶ月の巡らせの記録が、まだありません。</div></div>';
     return;
   }
-  const headMonths=months.map(m=>`<span>${m.label}月</span>`).join('');
-  const rows=cats.map(([k,v])=>{
-    const c=catOf(k);
-    const maxC=Math.max.apply(null,months.map(m=>v.m[m.key]||0))||1;
-    const bars=months.map(m=>{const val=v.m[m.key]||0;const h=val?Math.max(8,Math.round(val/maxC*100)):0;
-      return `<span class="cb"><i style="height:${h}%;background:${c.c};opacity:${val?1:.16}"></i></span>`;}).join('');
-    return `<div class="ct-row">
-      <div class="ct-name"><span class="rowdot" style="background:${c.c}"></span>${c.l}</div>
-      <div class="ct-bars">${bars}</div>
-      <div class="ct-total">${yen(v.total)}</div>
-    </div>`;
-  }).join('');
+  if(focusCat && cats.indexOf(focusCat)<0) focusCat=null;
+
+  const shown = focusCat ? [focusCat] : cats;
+  let maxV=0;
+  shown.forEach(k=>months.forEach(m=>{maxV=Math.max(maxV,data[k].m[m.key]||0);}));
+  if(maxV<=0) maxV=1;
+
+  // SVG座標
+  const W=320,H=176,padL=12,padR=12,padT=16,padB=24;
+  const innerW=W-padL-padR, innerH=H-padT-padB;
+  const X=i=>padL + i*(innerW/(months.length-1));
+  const Y=v=>padT + innerH*(1 - v/maxV);
+
+  let grid='';
+  [0,0.5,1].forEach(t=>{const y=(padT+innerH*(1-t)).toFixed(1);
+    grid+=`<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="rgba(150,120,150,.14)" stroke-width="1"/>`;});
+  grid+=`<text x="${W-padR}" y="${padT-5}" text-anchor="end" font-size="9" fill="#a99bad">${yen(maxV)}</text>`;
+  let xlab='';
+  months.forEach((m,i)=>{xlab+=`<text x="${X(i).toFixed(1)}" y="${H-7}" text-anchor="middle" font-size="9.5" fill="#a99bad">${m.label}月</text>`;});
+
+  let lines='';
+  shown.forEach(k=>{
+    const col=catOf(k).c;
+    const pts=months.map((m,i)=>`${X(i).toFixed(1)},${Y(data[k].m[m.key]||0).toFixed(1)}`).join(' ');
+    lines+=`<polyline points="${pts}" style="fill:none;stroke:${col};stroke-width:2.2" stroke-linecap="round" stroke-linejoin="round"/>`;
+    months.forEach((m,i)=>{const val=data[k].m[m.key]||0;
+      lines+=`<circle cx="${X(i).toFixed(1)}" cy="${Y(val).toFixed(1)}" r="2.8" style="fill:${col}"/>`;
+      if(focusCat && val>0) lines+=`<text x="${X(i).toFixed(1)}" y="${(Y(val)-7).toFixed(1)}" text-anchor="middle" font-size="9" style="fill:${col}">${yen(val)}</text>`;
+    });
+  });
+
+  const svg=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="費目ごとの折れ線グラフ">${grid}${lines}${xlab}</svg>`;
+
+  const legend=cats.map(k=>{const c=catOf(k);
+    const on=focusCat===k, dim=focusCat&&!on;
+    return `<button class="lc-leg${on?' on':''}${dim?' dim':''}" onclick="focusCategory('${k}')">`
+      +`<span class="rowdot" style="background:${c.c}"></span>${c.l}</button>`;}).join('');
+
+  const hint = focusCat
+    ? `${catOf(focusCat).l}：6ヶ月で ${yen(data[focusCat].total)}（もう一度タップで全体へ）`
+    : '費目をタップすると、その費目だけ大きく見られます';
+
   box.innerHTML=`<div class="cattrend">
     <div class="ct-title">費目ごとの移り変わり</div>
-    <div class="ct-sub">最近6ヶ月 · どの暮らしへ、どれだけ巡らせたか</div>
-    <div class="ct-row ct-head"><div class="ct-name"></div><div class="ct-bars-h">${headMonths}</div><div class="ct-total"></div></div>
-    ${rows}
+    <div class="ct-sub">最近6ヶ月 · 毎月の動き</div>
+    <div class="lc-wrap">
+      <div class="lc-legend">${legend}</div>
+      <div class="lc-chart">${svg}</div>
+    </div>
+    <div class="lc-hint">${hint}</div>
   </div>`;
 }
 
