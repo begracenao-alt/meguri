@@ -639,7 +639,7 @@ function importData(input){
       const arr=JSON.parse(r.result);
       if(!Array.isArray(arr)) throw new Error('format');
       if(confirm('今の記録を、このバックアップで置き換えますか？')){
-        store(arr); render(); toast('バックアップから戻しました'); go('home');
+        store(arr); initTlMonth(); render(); toast('バックアップから戻しました'); go('home');
       }
     }catch(e){ alert('このファイルは読み込めませんでした。めぐりのバックアップファイルか確認してください。'); }
     input.value='';
@@ -778,9 +778,11 @@ function renderCatTrends(all){
     return `<button class="lc-leg${on?' on':''}${dim?' dim':''}" onclick="focusCategory('${k}')">`
       +`<span class="rowdot" style="background:${c.c}"></span>${c.l}</button>`;}).join('');
 
+  const monthsWithData=months.filter(mm=>cats.some(k=>data[k].m[mm.key])).length;
   const hint = focusCat
     ? `${catOf(focusCat).l}：6ヶ月で ${yen(data[focusCat].total)}（もう一度タップで全体へ）`
-    : '費目をタップすると、その費目だけ大きく見られます';
+    : (monthsWithData<2 ? '月を重ねるほど、移り変わりがはっきり見えてきます🤍'
+                        : '費目をタップすると、その費目だけ大きく見られます');
 
   box.innerHTML=`<div class="cattrend">
     <div class="ct-title">費目ごとの移り変わり</div>
@@ -795,7 +797,11 @@ function renderCatTrends(all){
 
 // 月めくり（巡りタブ）
 let tlY, tlM;
-function initTlMonth(){const n=new Date(); tlY=n.getFullYear(); tlM=n.getMonth();}
+function initTlMonth(){
+  const all=load();
+  if(all.length){ const d=new Date(Math.max.apply(null,all.map(e=>e.t))); tlY=d.getFullYear(); tlM=d.getMonth(); }
+  else { const n=new Date(); tlY=n.getFullYear(); tlM=n.getMonth(); }
+}
 function shiftMonth(d){
   tlM+=d;
   while(tlM<0){tlM+=12;tlY--;}
