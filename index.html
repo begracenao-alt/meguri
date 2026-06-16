@@ -867,20 +867,23 @@ function renderSaveGrow(all){
   // 泉（ある）— 貯めた額ではなく、いつでも暮らしへ還せる安心
   const springNow=Math.max(0, all.filter(x=>x.kind==='save').reduce((a,x)=>a+x.amt,0) - all.filter(x=>x.kind==='unsave').reduce((a,x)=>a+x.amt,0));
 
+  // 今月のビューティフル / サファリングの回数（月ごとにリセット）
+  const bC=outsM.filter(e=>e.q>=0).length, sC=outsM.filter(e=>e.q<0).length;
+  const totalM=bC+sC;
+  let bsRead;
+  if(totalM<3) bsRead='まだ月の始まり。これからの巡りを、ゆっくり見つめましょう🤍';
+  else if(bC>sC) bsRead='今月は、美しい巡りが多めです🤍';
+  else if(bC===sC) bsRead='美しさと、ゆらぎと。半分ずつ。';
+  else bsRead='今月は、サファリングが多め。責めずに、ね。';
+
+  // 先月くらべ（今月が3件以上たまってから）
   let compare='';
-  if(beautyL!==null && beautyM!==null){
+  if(totalM>=3 && beautyL!==null && beautyM!==null){
     const d=beautyM-beautyL;
-    if(d>0) compare=`先月より <b style="color:#b88a32">${d}%</b> 美しく巡った月でした🤍`;
+    if(d>0) compare=`先月より <b style="color:#b88a32">${d}%</b> 美しく巡っています🤍`;
     else if(d===0) compare='先月と同じ美しさで、巡っています。';
     else compare='今月も、めぐりは続いています。これも、めぐり。';
   }
-
-  // 今月のビューティフル / サファリングの回数（月ごとにリセット）
-  const bC=outsM.filter(e=>e.q>=0).length, sC=outsM.filter(e=>e.q<0).length;
-  let bsRead;
-  if(bC>sC) bsRead='今月は、美しい巡りが多い月でした🤍';
-  else if(bC===sC) bsRead='美しさと、ゆらぎと。半分ずつの月。';
-  else bsRead='サファリングが多めの月。責めずに、ね。これも、めぐり。';
   const bsHtml = outsM.length ? `<div class="mg-bs">
     <div class="bs-row"><span class="bs b">🤍 ビューティフル <b>${bC}</b>回</span><span class="bs s">🌫 サファリング <b>${sC}</b>回</span></div>
     <div class="bs-read">${bsRead}</div></div>`
