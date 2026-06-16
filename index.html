@@ -295,6 +295,13 @@
   .mg-cap{text-align:center;font-size:13px;color:var(--ink-dim);line-height:1.85;margin:10px 12px 16px}
   .mg-spring{text-align:center;font-size:12.5px;color:var(--ink-dim);margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
   .mg-spring b{color:#b88a32;font-weight:700;font-variant-numeric:tabular-nums}
+  .mg-bs{text-align:center;margin:0 0 16px}
+  .mg-bs .bs-row{display:flex;justify-content:center;flex-wrap:wrap;gap:8px 16px;margin-bottom:8px;font-size:13px;color:var(--ink-dim)}
+  .mg-bs .bs{display:inline-flex;align-items:center;gap:5px}
+  .mg-bs .bs b{font-weight:700;font-variant-numeric:tabular-nums;font-size:15px}
+  .mg-bs .bs.b b{color:#b88a32}
+  .mg-bs .bs.s b{color:#7c84a8}
+  .mg-bs .bs-read{font-size:12.5px;color:var(--ink-dim);line-height:1.7}
 
   /* ---------- nav ---------- */
   nav{position:fixed;left:0;right:0;bottom:0;z-index:20;
@@ -875,10 +882,21 @@ function renderSaveGrow(all){
     else compare='今月も、めぐりは続いています。これも、めぐり。';
   }
 
+  // 今月のビューティフル / サファリングの回数（月ごとにリセット）
+  const bC=outsM.filter(e=>e.q>=0).length, sC=outsM.filter(e=>e.q<0).length;
+  let bsRead;
+  if(bC>sC) bsRead='今月は、美しい巡りが多い月でした🤍';
+  else if(bC===sC) bsRead='美しさと、ゆらぎと。半分ずつの月。';
+  else bsRead='サファリングが多めの月。責めずに、ね。これも、めぐり。';
+  const bsHtml = outsM.length ? `<div class="mg-bs">
+    <div class="bs-row"><span class="bs b">🤍 ビューティフル <b>${bC}</b>回</span><span class="bs s">🌫 サファリング <b>${sC}</b>回</span></div>
+    <div class="bs-read">${bsRead}</div></div>` : '';
+
   box.innerHTML=`<div class="cattrend">
     <div class="ct-title">今月のめぐり</div>
     <div class="mg-hero"><div class="mg-pct">${heroPct}</div><div class="mg-pct-k">美しく巡らせた</div></div>
     <div class="mg-cap">${cap}</div>
+    ${bsHtml}
     <div class="sg-stats">
       <div><div class="k">受け取り</div><div class="v" style="color:#3f7a55">${yen(inM)}</div></div>
       <div><div class="k">巡らせ</div><div class="v" style="color:var(--lav)">${yen(outM)}</div></div>
