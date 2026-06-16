@@ -150,28 +150,29 @@
   .q-label .b{color:var(--rose)}
 
   .q-ask{text-align:center;font-size:15px;color:var(--ink);letter-spacing:.04em;margin:2px 0 16px;font-weight:500}
-  .choice{display:flex;gap:8px}
-  .ch{flex:1;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:15px 5px 13px;
-    text-align:center;cursor:pointer;transition:.28s;opacity:.5;box-shadow:var(--shadow)}
+  .choice{display:flex;flex-direction:column;gap:10px}
+  .ch{display:flex;align-items:center;gap:14px;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px 16px;
+    cursor:pointer;transition:.28s;opacity:.55;box-shadow:var(--shadow)}
   .ch.on{opacity:1}
-  .ch.ch-b.on{border-color:var(--champ);box-shadow:0 0 0 1.5px var(--champ),0 10px 26px rgba(230,200,140,.32);
+  .ch.ch-b.on{border-color:var(--champ);box-shadow:0 0 0 1.5px var(--champ),0 8px 22px rgba(230,200,140,.28);
     background:linear-gradient(180deg,#fff,#fffaef)}
-  .ch.ch-w.on{border-color:var(--rosegold);box-shadow:0 0 0 1.5px var(--rosegold),0 10px 24px rgba(227,166,144,.28);
+  .ch.ch-w.on{border-color:var(--rosegold);box-shadow:0 0 0 1.5px var(--rosegold),0 8px 22px rgba(227,166,144,.26);
     background:linear-gradient(180deg,#fff,#fdf3ee)}
-  .ch.ch-x.on{border-color:var(--cool);box-shadow:0 0 0 1.5px var(--cool),0 10px 24px rgba(150,152,186,.26);
+  .ch.ch-x.on{border-color:var(--cool);box-shadow:0 0 0 1.5px var(--cool),0 8px 22px rgba(150,152,186,.24);
     background:linear-gradient(180deg,#fff,#f6f7fb)}
-  .ch-orb{width:52px;height:52px;border-radius:50%;margin:0 auto 11px;transition:.3s}
+  .ch-orb{width:46px;height:46px;border-radius:50%;flex:0 0 auto;transition:.3s}
   .ch-orb.b{background:radial-gradient(circle at 38% 30%,#fff 0%,#fbeecb 28%,var(--champ-soft) 54%,var(--rosegold) 82%,var(--lav) 100%);
-    box-shadow:0 0 22px 3px rgba(230,200,140,.5)}
+    box-shadow:0 0 18px 2px rgba(230,200,140,.45)}
   .ch-orb.w{background:linear-gradient(135deg,#dcd8ec 0%,var(--cool) 20%,var(--champ-soft) 62%,var(--rosegold) 100%);
-    box-shadow:0 0 20px 2px rgba(227,166,144,.42)}
+    box-shadow:0 0 16px 2px rgba(227,166,144,.4)}
   .ch-orb.s{background:radial-gradient(circle at 40% 34%,#fbfaff 0%,#d9d2e6 44%,var(--cool) 84%,var(--cool-deep) 100%);
-    box-shadow:0 0 14px 1px rgba(150,152,186,.35)}
-  .ch-t{font-size:13px;letter-spacing:.06em;font-weight:700}
+    box-shadow:0 0 12px 1px rgba(150,152,186,.3)}
+  .ch-txt{flex:1;min-width:0}
+  .ch-t{font-size:14px;letter-spacing:.06em;font-weight:700}
   .ch-b .ch-t{color:#a9802f}
   .ch-w .ch-t{color:#c2856a}
   .ch-x .ch-t{color:#6a7196}
-  .ch-s{font-size:11px;color:var(--ink-dim);margin-top:6px;line-height:1.55}
+  .ch-s{font-size:12px;color:var(--ink-dim);margin-top:3px;line-height:1.6}
 
   .date-row{display:flex;align-items:center;justify-content:space-between;background:var(--card);
     border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-top:18px;box-shadow:var(--shadow)}
@@ -427,18 +428,15 @@
       <div class="choice">
         <button class="ch ch-b on" id="chB" onclick="pickQ('beautiful')">
           <div class="ch-orb b"></div>
-          <div class="ch-t">Beautiful</div>
-          <div class="ch-s">はじめから<br>穏やか</div>
+          <div class="ch-txt"><div class="ch-t">Beautiful state</div><div class="ch-s">苦しみのない静けさ。感謝・歓び・ニュートラル</div></div>
         </button>
         <button class="ch ch-w" id="chW" onclick="pickQ('switched')">
           <div class="ch-orb w"></div>
-          <div class="ch-t">切り替えた</div>
-          <div class="ch-s">ざわついたけど<br>整えた🤍</div>
+          <div class="ch-txt"><div class="ch-t">切り替えた</div><div class="ch-s">ざわついたけど、整えて巡らせた。その切り替えが、いちばん尊い🤍</div></div>
         </button>
         <button class="ch ch-x" id="chS" onclick="pickQ('suffering')">
           <div class="ch-orb s"></div>
-          <div class="ch-t">Suffering</div>
-          <div class="ch-s">今は<br>そのまま</div>
+          <div class="ch-txt"><div class="ch-t">Suffering state</div><div class="ch-s">苦しみのある意識。恐れ・不安・我慢・義務</div></div>
         </button>
       </div>
     </div>
