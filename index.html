@@ -867,13 +867,6 @@ function renderSaveGrow(all){
   // 泉（ある）— 貯めた額ではなく、いつでも暮らしへ還せる安心
   const springNow=Math.max(0, all.filter(x=>x.kind==='save').reduce((a,x)=>a+x.amt,0) - all.filter(x=>x.kind==='unsave').reduce((a,x)=>a+x.amt,0));
 
-  const heroPct = beautyM===null ? '—' : beautyM+'%';
-  let cap;
-  if(beautyM===null) cap='今月は、まだ巡り始めていません。<br>最初のひと巡りを、美しい気持ちで。';
-  else if(beautyM>=70) cap='美しい巡りが、豊かさを連れて還ってきます。';
-  else if(beautyM>=40) cap='もう少し、歓びとともに巡らせてみる？';
-  else cap='次のひと巡りは、ありがとうの気持ちで。';
-
   let compare='';
   if(beautyL!==null && beautyM!==null){
     const d=beautyM-beautyL;
@@ -890,12 +883,11 @@ function renderSaveGrow(all){
   else bsRead='サファリングが多めの月。責めずに、ね。これも、めぐり。';
   const bsHtml = outsM.length ? `<div class="mg-bs">
     <div class="bs-row"><span class="bs b">🤍 ビューティフル <b>${bC}</b>回</span><span class="bs s">🌫 サファリング <b>${sC}</b>回</span></div>
-    <div class="bs-read">${bsRead}</div></div>` : '';
+    <div class="bs-read">${bsRead}</div></div>`
+    : '<div class="mg-cap">今月は、まだ巡り始めていません。<br>最初のひと巡りを、美しい気持ちで。</div>';
 
   box.innerHTML=`<div class="cattrend">
     <div class="ct-title">今月のめぐり</div>
-    <div class="mg-hero"><div class="mg-pct">${heroPct}</div><div class="mg-pct-k">美しく巡らせた</div></div>
-    <div class="mg-cap">${cap}</div>
     ${bsHtml}
     <div class="sg-stats">
       <div><div class="k">受け取り</div><div class="v" style="color:#3f7a55">${yen(inM)}</div></div>
