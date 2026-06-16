@@ -150,23 +150,28 @@
   .q-label .b{color:var(--rose)}
 
   .q-ask{text-align:center;font-size:15px;color:var(--ink);letter-spacing:.04em;margin:2px 0 16px;font-weight:500}
-  .choice{display:flex;gap:12px}
-  .ch{flex:1;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px 10px 16px;
+  .choice{display:flex;gap:8px}
+  .ch{flex:1;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:15px 5px 13px;
     text-align:center;cursor:pointer;transition:.28s;opacity:.5;box-shadow:var(--shadow)}
   .ch.on{opacity:1}
   .ch.ch-b.on{border-color:var(--champ);box-shadow:0 0 0 1.5px var(--champ),0 10px 26px rgba(230,200,140,.32);
     background:linear-gradient(180deg,#fff,#fffaef)}
+  .ch.ch-w.on{border-color:var(--rosegold);box-shadow:0 0 0 1.5px var(--rosegold),0 10px 24px rgba(227,166,144,.28);
+    background:linear-gradient(180deg,#fff,#fdf3ee)}
   .ch.ch-x.on{border-color:var(--cool);box-shadow:0 0 0 1.5px var(--cool),0 10px 24px rgba(150,152,186,.26);
     background:linear-gradient(180deg,#fff,#f6f7fb)}
-  .ch-orb{width:66px;height:66px;border-radius:50%;margin:0 auto 13px;transition:.3s}
+  .ch-orb{width:52px;height:52px;border-radius:50%;margin:0 auto 11px;transition:.3s}
   .ch-orb.b{background:radial-gradient(circle at 38% 30%,#fff 0%,#fbeecb 28%,var(--champ-soft) 54%,var(--rosegold) 82%,var(--lav) 100%);
-    box-shadow:0 0 26px 3px rgba(230,200,140,.5)}
+    box-shadow:0 0 22px 3px rgba(230,200,140,.5)}
+  .ch-orb.w{background:linear-gradient(135deg,#dcd8ec 0%,var(--cool) 20%,var(--champ-soft) 62%,var(--rosegold) 100%);
+    box-shadow:0 0 20px 2px rgba(227,166,144,.42)}
   .ch-orb.s{background:radial-gradient(circle at 40% 34%,#fbfaff 0%,#d9d2e6 44%,var(--cool) 84%,var(--cool-deep) 100%);
     box-shadow:0 0 14px 1px rgba(150,152,186,.35)}
-  .ch-t{font-size:15px;letter-spacing:.1em;font-weight:700}
+  .ch-t{font-size:13px;letter-spacing:.06em;font-weight:700}
   .ch-b .ch-t{color:#a9802f}
+  .ch-w .ch-t{color:#c2856a}
   .ch-x .ch-t{color:#6a7196}
-  .ch-s{font-size:12.5px;color:var(--ink-dim);margin-top:7px;line-height:1.65}
+  .ch-s{font-size:11px;color:var(--ink-dim);margin-top:6px;line-height:1.55}
 
   .date-row{display:flex;align-items:center;justify-content:space-between;background:var(--card);
     border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-top:18px;box-shadow:var(--shadow)}
@@ -300,8 +305,11 @@
   .mg-bs .bs{display:inline-flex;align-items:center;gap:5px}
   .mg-bs .bs b{font-weight:700;font-variant-numeric:tabular-nums;font-size:15px}
   .mg-bs .bs.b b{color:#b88a32}
+  .mg-bs .bs.w b{color:#c2856a}
   .mg-bs .bs.s b{color:#7c84a8}
   .mg-bs .bs-read{font-size:12.5px;color:var(--ink-dim);line-height:1.7}
+  .mg-tuned{text-align:center;font-size:12.5px;color:var(--ink-dim);margin-top:12px}
+  .mg-tuned b{color:#c2856a;font-weight:700;font-variant-numeric:tabular-nums}
 
   /* ---------- nav ---------- */
   nav{position:fixed;left:0;right:0;bottom:0;z-index:20;
@@ -415,17 +423,22 @@
     </div>
 
     <div id="qualityBlock">
-      <div class="q-ask">そのお金は、どちらの意識で？</div>
+      <div class="q-ask">そのお金は、どの意識で？</div>
       <div class="choice">
-        <button class="ch ch-b on" id="chB" onclick="pickQ(1)">
+        <button class="ch ch-b on" id="chB" onclick="pickQ('beautiful')">
           <div class="ch-orb b"></div>
-          <div class="ch-t">Beautiful state</div>
-          <div class="ch-s">苦しみのない静けさ<br>感謝・歓び・ニュートラル</div>
+          <div class="ch-t">Beautiful</div>
+          <div class="ch-s">はじめから<br>穏やか</div>
         </button>
-        <button class="ch ch-x" id="chS" onclick="pickQ(-1)">
+        <button class="ch ch-w" id="chW" onclick="pickQ('switched')">
+          <div class="ch-orb w"></div>
+          <div class="ch-t">切り替えた</div>
+          <div class="ch-s">ざわついたけど<br>整えた🤍</div>
+        </button>
+        <button class="ch ch-x" id="chS" onclick="pickQ('suffering')">
           <div class="ch-orb s"></div>
-          <div class="ch-t">Suffering state</div>
-          <div class="ch-s">苦しみのある意識<br>恐れ・不安・我慢・義務</div>
+          <div class="ch-t">Suffering</div>
+          <div class="ch-s">今は<br>そのまま</div>
         </button>
       </div>
     </div>
@@ -566,11 +579,13 @@ function renderCats(){
 }
 function pickCat(k){ selCat=k; renderCats(); }
 
-let selQ=1; // 1=Beautiful, -1=Suffering
-function pickQ(v){
-  selQ=v;
-  $('chB').classList.toggle('on',v>0);
-  $('chS').classList.toggle('on',v<0);
+let selMood='beautiful'; // 'beautiful' | 'switched' | 'suffering'
+function pickQ(m){
+  if(m===1) m='beautiful'; if(m===-1) m='suffering'; // 後方互換
+  selMood=m;
+  $('chB').classList.toggle('on', m==='beautiful');
+  if($('chW')) $('chW').classList.toggle('on', m==='switched');
+  $('chS').classList.toggle('on', m==='suffering');
 }
 
 $('amt').addEventListener('input',e=>{
@@ -604,13 +619,17 @@ function setKind(k){
 function save(){
   const amt=Number($('amt').value.replace(/[^0-9]/g,''))||0;
   if(amt<=0){ toast('金額を入れてね'); return; }
-  const q = (kind==='save'||kind==='unsave') ? 100 : selQ*100;
-  const e={ id:Date.now(), kind, amt, q, cat:(kind==='out'?selCat:null), memo:$('memo').value.trim(), t:entryTime() };
+  let q, sw=false;
+  if(kind==='save'||kind==='unsave'){ q=100; }
+  else if(selMood==='switched'){ q=100; sw=true; } // 切り替えた＝美しい巡りに数え、整えた1回を上乗せ
+  else if(selMood==='beautiful'){ q=100; }
+  else { q=-100; } // suffering
+  const e={ id:Date.now(), kind, amt, q, sw, cat:(kind==='out'?selCat:null), memo:$('memo').value.trim(), t:entryTime() };
   const a=load(); a.push(e); store(a);
   const sd=new Date(e.t); tlY=sd.getFullYear(); tlM=sd.getMonth(); // 記録した月を表示
-  $('amt').value=''; $('memo').value=''; pickQ(1); selCat='food'; renderCats(); setToday();
+  $('amt').value=''; $('memo').value=''; pickQ('beautiful'); selCat='food'; renderCats(); setToday();
   render(); go('home');
-  showMoment(kind, q);
+  showMoment(kind, q, sw);
 }
 
 const yen=n=>'¥'+Math.round(n).toLocaleString();
@@ -867,13 +886,16 @@ function renderSaveGrow(all){
   // 泉（ある）— 貯めた額ではなく、いつでも暮らしへ還せる安心
   const springNow=Math.max(0, all.filter(x=>x.kind==='save').reduce((a,x)=>a+x.amt,0) - all.filter(x=>x.kind==='unsave').reduce((a,x)=>a+x.amt,0));
 
-  // 今月のビューティフル / サファリングの回数（月ごとにリセット）
-  const bC=outsM.filter(e=>e.q>=0).length, sC=outsM.filter(e=>e.q<0).length;
-  const totalM=bC+sC;
+  // 今月の意識の回数（美しい / 整えた(切り替え) / サファリング・月ごとにリセット）
+  const swC=outsM.filter(e=>e.sw).length;
+  const bC=outsM.filter(e=>e.q>=0&&!e.sw).length, sC=outsM.filter(e=>e.q<0).length;
+  const beaTotal=bC+swC, totalM=beaTotal+sC;
+  const swAll=all.filter(e=>e.sw).length; // これまで整えて巡らせた合計（上乗せの積み重ね）
   let bsRead;
   if(totalM<3) bsRead='まだ月の始まり。これからの巡りを、ゆっくり見つめましょう🤍';
-  else if(bC>sC) bsRead='今月は、美しい巡りが多めです🤍';
-  else if(bC===sC) bsRead='美しさと、ゆらぎと。半分ずつ。';
+  else if(swC>0) bsRead=`ざわつきを <b style="color:#c2856a">${swC}</b> 回、整えて巡らせました🤍`;
+  else if(beaTotal>sC) bsRead='今月は、美しい巡りが多めです🤍';
+  else if(beaTotal===sC) bsRead='美しさと、ゆらぎと。半分ずつ。';
   else bsRead='今月は、サファリングが多め。責めずに、ね。';
 
   // 先月くらべ（今月が3件以上たまってから）
@@ -885,7 +907,7 @@ function renderSaveGrow(all){
     else compare='今月も、めぐりは続いています。これも、めぐり。';
   }
   const bsHtml = outsM.length ? `<div class="mg-bs">
-    <div class="bs-row"><span class="bs b">🤍 Beautiful <b>${bC}</b>回</span><span class="bs s">🌫 Suffering <b>${sC}</b>回</span></div>
+    <div class="bs-row"><span class="bs b">🤍 Beautiful <b>${bC}</b></span><span class="bs w">✨ 整えた <b>${swC}</b></span><span class="bs s">🌫 Suffering <b>${sC}</b></span></div>
     <div class="bs-read">${bsRead}</div></div>`
     : '<div class="mg-cap">今月は、まだ巡り始めていません。<br>最初のひと巡りを、美しい気持ちで。</div>';
 
@@ -898,6 +920,7 @@ function renderSaveGrow(all){
       <div><div class="k">差し引き</div><div class="v" style="color:${netM>=0?'#3f7a55':'var(--lav)'}">${(netM>=0?'+':'−')+yen(Math.abs(netM))}</div></div>
     </div>
     ${compare?`<div class="sg-compare">${compare}</div>`:''}
+    ${swAll>0?`<div class="mg-tuned">これまで、ざわつきを整えて巡らせた　<b>${swAll}</b> 回🤍</div>`:''}
     <div class="mg-spring">いつでも暮らしへ還せる「ある」 · <b>${yen(springNow)}</b></div>
   </div>`;
 }
@@ -1026,7 +1049,7 @@ function flowRow(e, del){
   const defLabel=e.kind==='out'?(cat?cat.l:'巡らせた'):e.kind==='in'?'受け取った':e.kind==='save'?'泉に積んだ':'暮らしへ還した';
   const catDot=cat?`<span class="rowdot" style="background:${cat.c}"></span>`:'';
   const catPre=(cat&&e.memo)?cat.l+' · ':'';
-  const sub=e.kind==='save'?'豊かさを積む（ある）':e.kind==='unsave'?'泉から暮らしへ還す':qWord(e.q);
+  const sub=e.kind==='save'?'豊かさを積む（ある）':e.kind==='unsave'?'泉から暮らしへ還す':(e.sw?'ざわつきを整えて巡らせた🤍':qWord(e.q));
   return `<div class="flow">
     <div class="dot" style="background:${dotColor(e.q)};box-shadow:0 0 10px 1px ${e.q>=0?'rgba(232,154,166,.5)':'rgba(150,152,186,.4)'}"></div>
     <div class="meta">
@@ -1051,10 +1074,14 @@ function go(s){
 
 // 記録の瞬間の「間」
 let momentT;
-function showMoment(kind,q){
+function showMoment(kind,q,sw){
   const orb=$('momentOrb'), t=$('momentText'), s=$('momentSub'), c=$('momentClose');
   let cls='warm', txt, sub, closeLabel='そっと閉じる', auto=2600;
-  if(kind==='out' && q<0){
+  if(kind==='out' && sw){
+    cls='warm'; auto=3200;
+    txt='ざわつきを、整えました';
+    sub='その切り替えが、いちばん尊い。<br>美しい巡りに、ひとつ上乗せ🤍';
+  }else if(kind==='out' && q<0){
     cls='cool'; auto=0; closeLabel='受け入れた';
     txt='ひと呼吸 —';
     sub='いま在る気持ちを、ただ感じてみて。<br>その気持ちも、そのままでいい。';
