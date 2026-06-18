@@ -540,7 +540,7 @@ function setPeriod(p){
 }
 
 function load(){ try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return[]} }
-function store(a){ localStorage.setItem(KEY,JSON.stringify(a)) }
+function store(a){ try{ localStorage.setItem(KEY,JSON.stringify(a)); }catch(e){} }
 
 // q: -100..100 -> やわらかい色
 function feelColor(q){

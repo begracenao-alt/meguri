@@ -8,7 +8,7 @@
   - ネットが無いときだけ、キャッシュ（保存済み）から表示する。
   - キャッシュへの保存に失敗しても、アプリ本体は決して止めない。
 */
-const CACHE = 'meguri-v1';
+const CACHE = 'meguri-v2';
 const CORE = [
   './',
   './index.html',
