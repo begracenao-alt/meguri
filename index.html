@@ -1120,7 +1120,8 @@ pickQ(1); renderCats(); setToday(); initTlMonth(); render();
 
 // オフラインでも動くように（失敗してもアプリ本体は止めない）
 if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+  navigator.serviceWorker.getRegistrations().then(function(rs){ rs.forEach(function(r){ r.unregister(); }); }).catch(function(){});
+  if(window.caches){ caches.keys().then(function(ks){ ks.forEach(function(k){ caches.delete(k); }); }).catch(function(){}); }
 }
 </script>
 </body>
